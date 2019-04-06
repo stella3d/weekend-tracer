@@ -1,4 +1,5 @@
-﻿using Unity.Burst;
+﻿using System.Runtime.CompilerServices;
+using Unity.Burst;
 using Unity.Collections;
 using Unity.Jobs;
 using Unity.Mathematics;
@@ -7,12 +8,15 @@ using Random = Unity.Mathematics.Random;
 
 namespace RayTracingWeekend
 {
-    public class ChapterSevenAlternate : Chapter<Color24>
+    public class ChapterEight : Chapter<Color24>
     {
         public int numberOfSamples;
         public float absorbRate;
+
+        public float fuzzinessOne;
+        public float fuzzinessTwo;
         
-        //[BurstCompile]
+        [BurstCompile]
         public struct Job : IJob
         {
             public float absorbRate;
@@ -47,7 +51,7 @@ namespace RayTracingWeekend
                             float v = (j + random.NextFloat()) / ny;
                             Ray r = camera.GetRay(u, v);
                             recursionCounter = 0;
-                            col += Color(r, World);
+                            col += Color(r, World, 0);
                         }
 
                         col /= (float)numberOfSamples;
@@ -68,18 +72,46 @@ namespace RayTracingWeekend
                 while (p.x * p.x + p.y * p.y + p.z * p.z >= 1.0f);
                 return p;
             }
-
+            
             // implementing as a straight translation of the C++ gave me a stack overflow
             int recursionCounter;
+            
+            public MetalMaterial metal;
+            public DiffuseMaterial diffuse;
 
-            public float3 Color(Ray r, HitableArray<Sphere> world)
+            public float3 Color(Ray r, HitableArray<Sphere> world, int depth)
             {
                 var rec = new HitRecord();
-                if (recursionCounter < 4 && world.Hit(r, 0.001f, float.MaxValue, ref rec))
+                if (recursionCounter < maxHits && world.Hit(r, 0.001f, float.MaxValue, ref rec))
                 {
                     recursionCounter++;
-                    var target = rec.p + rec.normal + RandomInUnitSphere();
-                    return absorbRate * Color(new Ray(rec.p, target - rec.p), world);
+                    Ray scattered = new Ray();
+                    float3 attenuation = new float3();
+                    var albedo = rec.material.albedo;
+                    if (depth < 50)
+                    {
+                        switch (rec.material.type)
+                        {
+                            case MaterialType.Lambertian:
+                                if (DiffuseMaterial.Scatter(random, albedo,
+                                    r, rec, ref attenuation, ref scattered))
+                                {
+                                    return attenuation * Color(scattered, world, depth + 1);
+                                }
+                                break;
+                            case MaterialType.Metal:
+                                if (MetalMaterial.Scatter(rec.material,
+                                    r, rec, random, ref attenuation, ref scattered))
+                                {
+                                    return attenuation * Color(scattered, world, depth + 1);
+                                }
+                                break;
+                        }
+                    }
+                    else
+                    {
+                        return new float3();
+                    }
                 }
                 
                 float3 unitDirection = math.normalize(r.direction);
@@ -93,16 +125,13 @@ namespace RayTracingWeekend
         public override void DrawToTexture()
         {
             ScaleTexture(m_CanvasScale);
-            var spheres = new HitableArray<Sphere>(4, Allocator.TempJob)
-            {
-                Objects =
-                {
-                    [0] = new Sphere(new float3(0.5f, 0f, -2f), 0.5f),
-                    [1] = new Sphere(new float3(-1.5f, 0f, -1.5f), 0.5f),
-                    [2] = new Sphere(new float3(1.2f, -0.375f, -1.5f), 0.125f),
-                    [3] = new Sphere(new float3(0f, -100.5f, -1f), 100f)
-                }
-            };
+            var spheres = ExampleSphereSets.FourVaryingSizeAndMaterial();
+            var metal1 = spheres.Objects[2];
+            metal1.material.fuzziness = fuzzinessOne;
+            spheres.Objects[2] = metal1;
+            var metal2 = spheres.Objects[3];
+            metal2.material.fuzziness = fuzzinessTwo;
+            spheres.Objects[3] = metal2;
             
             var rand = new Random();
             rand.InitState();
@@ -110,7 +139,7 @@ namespace RayTracingWeekend
             var job = new Job()
             {
                 absorbRate = absorbRate,
-                maxHits = 16,
+                maxHits = 50,
                 camera = CameraFrame.Default,
                 numberOfSamples = numberOfSamples,
                 random = rand,

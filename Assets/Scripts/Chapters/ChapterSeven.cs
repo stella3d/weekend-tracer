@@ -75,7 +75,7 @@ namespace RayTracingWeekend
             public float3 Color(Ray r, HitableArray<Sphere> world)
             {
                 var rec = new HitRecord();
-                if (recursionCounter < 4 && world.Hit(r, 0.001f, float.MaxValue, ref rec))
+                if (recursionCounter < maxHits && world.Hit(r, 0.001f, float.MaxValue, ref rec))
                 {
                     recursionCounter++;
                     var target = rec.p + rec.normal + RandomInUnitSphere();
@@ -101,7 +101,7 @@ namespace RayTracingWeekend
             var job = new Job()
             {
                 absorbRate = absorbRate,
-                maxHits = 16,
+                maxHits = 32,
                 camera = CameraFrame.Default,
                 numberOfSamples = numberOfSamples,
                 random = rand,

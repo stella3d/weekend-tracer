@@ -14,7 +14,7 @@ namespace RayTracingWeekend
         ChapterFiveTwo m_ChapterFiveTwo;
         ChapterSix m_ChapterSix;
         ChapterSeven m_ChapterSeven;
-        ChapterSevenAlternate m_ChapterSevenAlt;
+        ChapterEight m_ChapterEight;
 
         // default position and color same as the book
         float m_Chapter4ZPosition = -1f;
@@ -39,7 +39,7 @@ namespace RayTracingWeekend
             m_ChapterFiveTwo = new ChapterFiveTwo();
             m_ChapterSix = new ChapterSix();
             m_ChapterSeven = new ChapterSeven();
-            m_ChapterSevenAlt = new ChapterSevenAlternate();
+            m_ChapterEight = new ChapterEight();
         }
 
         void OnGUI()
@@ -58,7 +58,7 @@ namespace RayTracingWeekend
 
             DrawChapterSix();
             DrawChapterSeven();
-            DrawChapterSevenAlt();
+            DrawChapterEight();
             
             EditorGUILayout.EndScrollView();
         }
@@ -86,6 +86,10 @@ namespace RayTracingWeekend
         float m_AbsorbRateSeven = 0.5f;
         float m_PreviousAbsorbRateSeven = 0.5f;
         
+        int m_SampleCountEight = 16;
+        float m_PreviousAbsorbRateEight = 0.5f;
+
+        
         void DrawChapterSix()
         {
             m_SampleCountSix = EditorGUILayout.IntField("Sample Count", m_SampleCountSix);
@@ -107,28 +111,24 @@ namespace RayTracingWeekend
             }
 
             m_PreviousAbsorbRateSeven = m_AbsorbRateSeven;
-
             DrawChapterBasic(m_ChapterSeven, "7");
         }
         
-        void DrawChapterSevenAlt()
+        void DrawChapterEight()
         {
-            m_SampleCountSeven = EditorGUILayout.IntField("Sample Count", m_SampleCountSeven);
-            m_ChapterSevenAlt.numberOfSamples = m_SampleCountSeven;
+            m_SampleCountEight = EditorGUILayout.IntField("Sample Count", m_SampleCountEight);
+            m_ChapterEight.numberOfSamples = m_SampleCountEight;
 
-            m_AbsorbRateSeven = EditorGUILayout.Slider("Absorb Rate", m_AbsorbRateSeven, 0.05f, 0.95f);
-            m_ChapterSevenAlt.absorbRate = m_AbsorbRateSeven;
-
-            if (!Mathf.Approximately(m_AbsorbRateSeven, m_PreviousAbsorbRateSeven))
-            {
-                m_ChapterSevenAlt.DrawToTexture();
-            }
-
-            m_PreviousAbsorbRateSeven = m_AbsorbRateSeven;
-
-            DrawChapterBasic(m_ChapterSevenAlt, "7 (alt)");
+            EditorGUILayout.BeginHorizontal();
+            EditorGUILayout.PrefixLabel("fuzziness left");
+            m_ChapterEight.fuzzinessOne = Mathf.Clamp01(EditorGUILayout.DelayedFloatField(m_ChapterEight.fuzzinessOne));
+            EditorGUILayout.PrefixLabel("fuzziness right");
+            m_ChapterEight.fuzzinessTwo = Mathf.Clamp01(EditorGUILayout.DelayedFloatField(m_ChapterEight.fuzzinessTwo));
+            EditorGUILayout.EndHorizontal();
+            
+            DrawChapterBasic(m_ChapterEight, "8");
         }
-
+        
         static void DrawChapterBasic<T>(Chapter<T> chapter, string chapterNumber) where T: struct
         {
             if (GUILayout.Button($"Draw Chapter {chapterNumber} Image"))

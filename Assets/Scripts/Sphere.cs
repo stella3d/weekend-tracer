@@ -1,4 +1,5 @@
 using Unity.Mathematics;
+using UnityEngine;
 
 namespace RayTracingWeekend
 {
@@ -6,11 +7,20 @@ namespace RayTracingWeekend
     {
         public float3 center;
         public float radius;
-
+        public Material material;
+        
         public Sphere(float3 center, float radius)
         {
             this.center = center;
             this.radius = radius;
+            material = default;
+        }
+
+        public Sphere(float3 center, float radius, Material m)
+        {
+            this.center = center;
+            this.radius = radius;
+            material = m;
         }
 
         public bool Hit(Ray r, float tMin, float tMax, ref HitRecord rec)
@@ -30,6 +40,7 @@ namespace RayTracingWeekend
                     rec.t = temp;
                     rec.p = r.PointAtParameter(rec.t);
                     rec.normal = (rec.p - center) / radius;
+                    rec.material = material;
                     return true;
                 }
                 temp = (-b + sqrtDiscriminant) / a;
@@ -38,6 +49,7 @@ namespace RayTracingWeekend
                     rec.t = temp;
                     rec.p = r.PointAtParameter(rec.t);
                     rec.normal = (rec.p - center) / radius;
+                    rec.material = material;
                     return true;
                 }
             }

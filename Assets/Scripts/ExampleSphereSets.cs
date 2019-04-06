@@ -19,5 +19,23 @@ namespace RayTracingWeekend
                 }
             };
         }
+        
+        public static HitableArray<Sphere> FourVaryingSizeAndMaterial(Allocator allocator = Allocator.TempJob)
+        {
+            return new HitableArray<Sphere>(4, allocator)
+            {
+                Objects =
+                {
+                    [0] = new Sphere(new float3(0f, 0f, -1f), 0.5f, 
+                                     new Material(MaterialType.Lambertian, new float3(0.8f, 0.3f, 0.3f))),
+                    [1] = new Sphere(new float3(0f, -100.5f, -1f), 100f,
+                                     new Material(MaterialType.Lambertian, new float3(0.8f, 0.8f, 0.0f))),
+                    [2] = new Sphere(new float3(1f, 0f, -1f), 0.5f,
+                                     new Material(MaterialType.Metal, new float3(0.8f, 0.6f, 0.2f), 0.3f)),
+                    [3] = new Sphere(new float3(-1f, 0f, -1f), 0.5f,
+                                     new Material(MaterialType.Metal, new float3(0.8f, 0.8f, 0.8f), 0.1f)),
+                }
+            };
+        }
     }
 }
