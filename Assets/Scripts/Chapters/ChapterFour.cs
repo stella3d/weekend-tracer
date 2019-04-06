@@ -5,12 +5,18 @@ using Unity.Mathematics;
 
 namespace RayTracingWeekend
 {
-    public class ChapterThree : Chapter<Color24>
+    public class ChapterFour : Chapter<Color24>
     {
-        [BurstCompile]
+        public float spherePositionZ = -1f;
+        public float3 sphereColor = new float3(1f, 0f, 0f);
+        
+        //[BurstCompile]
         public struct Job : IJob
         {
             public int2 size;
+            
+            public float3 spherePosition;
+            public float3 sphereColor;
 
             [WriteOnly] public NativeArray<Color24> Pixels;
 
@@ -37,8 +43,21 @@ namespace RayTracingWeekend
                 }
             }
 
-            public static float3 Color(Ray r)
+            static bool HitSphere(float3 center, float radius, Ray r)
             {
+                float3 oc = r.origin - center;
+                float a = math.dot(r.direction, r.direction);
+                float b = 2f * math.dot(oc, r.direction);
+                float c = math.dot(oc, oc) - radius * radius;
+                float discriminant = b * b - 4 * a * c;
+                return discriminant > 0f;
+            }
+
+            public float3 Color(Ray r)
+            {
+                if(HitSphere(spherePosition, 0.5f, r))
+                    return sphereColor;
+                
                 float3 unitVector = math.normalize(r.direction);
                 float t = 0.5f * (unitVector.y + 1f);
                 return (1f - t) * Constants.one + t * Constants.blueGradient;
@@ -49,6 +68,8 @@ namespace RayTracingWeekend
         {
             var job = new Job()
             {
+                sphereColor = sphereColor,
+                spherePosition = new float3(0f, 0f, spherePositionZ),
                 size = Constants.ImageSize,
                 Pixels = GetBuffer()
             };

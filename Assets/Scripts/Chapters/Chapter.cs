@@ -12,5 +12,7 @@ namespace RayTracingWeekend
         {
             return new NativeArray<TPixel>(Constants.ImageSize.x * Constants.ImageSize.y, allocator);
         }
+
+        public abstract void DrawToTexture();
     }
 }

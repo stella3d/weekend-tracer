@@ -37,7 +37,7 @@ namespace RayTracingWeekend
             }
         }
 
-        public void WriteTestImage()
+        public override void DrawToTexture()
         {
             var job = new Job()
             {
