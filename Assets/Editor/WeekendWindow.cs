@@ -1,32 +1,47 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEditor;
+﻿using UnityEditor;
 using UnityEngine;
 
-public class WeekendWindow : EditorWindow
+namespace RayTracingWeekend
 {
-    ChapterOneImage m_ChapterOne;
-
-    [MenuItem("Window/Tracer")]
-    public static void ShowWindow()
+    public class WeekendWindow : EditorWindow
     {
-        var window = GetWindow<WeekendWindow>();
-        window.Show();
-    }
+        ChapterOne m_ChapterOne;
+        ChapterTwo m_ChapterTwo;
 
-    void OnEnable()
-    {
-        m_ChapterOne = new ChapterOneImage();
-    }
-
-    void OnGUI()
-    {
-        if (GUILayout.Button("Draw Chapter One Test Image"))
+        [MenuItem("Window/Tracer")]
+        public static void ShowWindow()
         {
-            m_ChapterOne.WriteTestImage();
+            var window = GetWindow<WeekendWindow>();
+            window.Show();
         }
 
-        var rect = EditorGUILayout.GetControlRect(GUILayout.Width(200), GUILayout.Height(100));
-        EditorGUI.DrawPreviewTexture(rect, m_ChapterOne.texture);
+        void OnEnable()
+        {
+            m_ChapterOne = new ChapterOne();
+            m_ChapterTwo = new ChapterTwo();
+        }
+
+        void OnGUI()
+        {
+            if (GUILayout.Button("Draw Chapter One Image"))
+                m_ChapterOne.WriteTestImage();
+
+            DrawTexture(m_ChapterOne.texture);
+            
+            EditorGUILayout.Separator();
+            
+            if (GUILayout.Button("Draw Chapter Two Image"))
+                m_ChapterTwo.WriteTestImage();
+
+            DrawTexture(m_ChapterTwo.texture);
+        }
+
+
+        void DrawTexture(Texture2D texture)
+        {
+            var rect = EditorGUILayout.GetControlRect(GUILayout.Width(200), GUILayout.Height(100));
+            EditorGUI.DrawPreviewTexture(rect, texture);
+        }
+
     }
 }

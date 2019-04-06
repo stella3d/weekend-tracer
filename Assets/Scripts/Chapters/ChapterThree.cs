@@ -1,7 +1,10 @@
-﻿using Unity.Collections;
+﻿using RayTracingWeekend;
+using Unity.Burst;
+using Unity.Collections;
 using Unity.Jobs;
 using Unity.Mathematics;
 using UnityEngine;
+using Ray = UnityEngine.Ray;
 
 public class ChapterThree
 {
@@ -9,7 +12,7 @@ public class ChapterThree
     {
         float3 unitVector = math.normalize(r.direction);
         float t = 0.5f * (unitVector.y + 1f);
-        return (1f - t) * VectorConstants.one + t * VectorConstants.blueGradient;
+        return (1f - t) * Constants.one + t * Constants.blueGradient;
     }
     
     public struct Job : IJob
