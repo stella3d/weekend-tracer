@@ -8,7 +8,7 @@ namespace RayTracingWeekend
     public class ChapterThree : Chapter<Color24>
     {
         [BurstCompile]
-        public struct Job : IJob, IGetPixelBuffer<Color24>
+        public struct Job : IJob
         {
             public int2 size;
 
@@ -43,11 +43,6 @@ namespace RayTracingWeekend
                 float t = 0.5f * (unitVector.y + 1f);
                 return (1f - t) * Constants.one + t * Constants.blueGradient;
             }
-
-            public NativeArray<Color24> GetPixels()
-            {
-                return Pixels;
-            }
         }
 
         public void WriteTestImage()
@@ -57,8 +52,9 @@ namespace RayTracingWeekend
                 size = Constants.ImageSize,
                 Pixels = GetBuffer()
             };
-
-            job.RunAndApply<Color24, Job>(texture);
+            
+            job.Run();
+            texture.LoadAndApply(job.Pixels);
         }
     }
 }

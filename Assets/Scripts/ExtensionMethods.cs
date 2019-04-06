@@ -1,4 +1,4 @@
-using Unity.Jobs;
+using Unity.Collections;
 using Unity.Mathematics;
 using UnityEngine;
 
@@ -14,18 +14,14 @@ namespace RayTracingWeekend
             var b = (byte) (color.z * rgbMultiplier);
             return new Color24(r, g, b);
         }
-
-        public static void RunAndApply<TPixel, TJob>(this TJob job, Texture2D texture, bool dispose = true)
-            where TJob : struct, IJob, IGetPixelBuffer<TPixel>
-            where TPixel : struct
+        
+        public static void LoadAndApply<T>(this Texture2D texture, NativeArray<T> buffer, bool dispose = true)
+            where T : struct
         {
-            var handle = job.Schedule();
-            handle.Complete();
-            var pixels = job.GetPixels();
-            texture.LoadRawTextureData(pixels);
+            texture.LoadRawTextureData(buffer);
             texture.Apply();
-            if (dispose)
-                pixels.Dispose();
+            if(dispose)
+                buffer.Dispose();
         }
     }
 }
