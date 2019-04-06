@@ -11,6 +11,7 @@ namespace RayTracingWeekend
         ChapterThree m_ChapterThree;
         ChapterFour m_ChapterFour;
         ChapterFive m_ChapterFive;
+        ChapterFiveTwo m_ChapterFiveTwo;
 
         // default position and color same as the book
         float m_Chapter4ZPosition = -1f;
@@ -30,18 +31,20 @@ namespace RayTracingWeekend
             m_ChapterThree = new ChapterThree();
             m_ChapterFour = new ChapterFour();
             m_ChapterFive = new ChapterFive();
+            m_ChapterFiveTwo = new ChapterFiveTwo();
         }
 
         void OnGUI()
         {
-            DrawChapterBasic(m_ChapterOne, "One");
-            DrawChapterBasic(m_ChapterTwo, "Two");
-            DrawChapterBasic(m_ChapterThree, "Three");
+            DrawChapterBasic(m_ChapterOne, "1");
+            DrawChapterBasic(m_ChapterTwo, "2");
+            DrawChapterBasic(m_ChapterThree, "3");
             
             EditorGUILayout.Space();
             DrawChapterFour();
             
-            DrawChapterBasic(m_ChapterFive, "Five");
+            DrawChapterBasic(m_ChapterFive, "5.1");
+            DrawChapterBasic(m_ChapterFiveTwo, "5.2");
         }
 
         void DrawChapterFour()
@@ -54,7 +57,7 @@ namespace RayTracingWeekend
             m_ChapterFour.sphereColor = new float3(color.r / rgbScale, color.g / rgbScale, color.b / rgbScale);
             m_ChapterFour.spherePositionZ = m_Chapter4ZPosition;
             
-            if (GUILayout.Button($"Draw Chapter Four Image"))
+            if (GUILayout.Button($"Draw Chapter 4 Image"))
                 m_ChapterFour.DrawToTexture();
 
             DrawTexture(m_ChapterFour.texture);
