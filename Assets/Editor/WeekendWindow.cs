@@ -13,6 +13,8 @@ namespace RayTracingWeekend
         ChapterFive m_ChapterFive;
         ChapterFiveTwo m_ChapterFiveTwo;
         ChapterSix m_ChapterSix;
+        ChapterSeven m_ChapterSeven;
+        ChapterSevenAlternate m_ChapterSevenAlt;
 
         // default position and color same as the book
         float m_Chapter4ZPosition = -1f;
@@ -36,6 +38,8 @@ namespace RayTracingWeekend
             m_ChapterFive = new ChapterFive();
             m_ChapterFiveTwo = new ChapterFiveTwo();
             m_ChapterSix = new ChapterSix();
+            m_ChapterSeven = new ChapterSeven();
+            m_ChapterSevenAlt = new ChapterSevenAlternate();
         }
 
         void OnGUI()
@@ -53,6 +57,8 @@ namespace RayTracingWeekend
             DrawChapterBasic(m_ChapterFiveTwo, "5.2");
 
             DrawChapterSix();
+            DrawChapterSeven();
+            DrawChapterSevenAlt();
             
             EditorGUILayout.EndScrollView();
         }
@@ -74,13 +80,53 @@ namespace RayTracingWeekend
             EditorGUILayout.Separator();
         }
 
-        int m_ChapterSixSampleCount = 16;
+        int m_SampleCountSix = 16;
+        int m_SampleCountSeven = 16;
+
+        float m_AbsorbRateSeven = 0.5f;
+        float m_PreviousAbsorbRateSeven = 0.5f;
         
         void DrawChapterSix()
         {
-            m_ChapterSixSampleCount = EditorGUILayout.IntField("Sample Count", m_ChapterSixSampleCount);
-            m_ChapterSix.numberOfSamples = m_ChapterSixSampleCount;
+            m_SampleCountSix = EditorGUILayout.IntField("Sample Count", m_SampleCountSix);
+            m_ChapterSix.numberOfSamples = m_SampleCountSix;
             DrawChapterBasic(m_ChapterSix, "6");
+        }
+        
+        void DrawChapterSeven()
+        {
+            m_SampleCountSeven = EditorGUILayout.IntField("Sample Count", m_SampleCountSeven);
+            m_ChapterSeven.numberOfSamples = m_SampleCountSeven;
+
+            m_AbsorbRateSeven = EditorGUILayout.Slider("Absorb Rate", m_AbsorbRateSeven, 0.05f, 0.95f);
+            m_ChapterSeven.absorbRate = m_AbsorbRateSeven;
+
+            if (!Mathf.Approximately(m_AbsorbRateSeven, m_PreviousAbsorbRateSeven))
+            {
+                m_ChapterSeven.DrawToTexture();
+            }
+
+            m_PreviousAbsorbRateSeven = m_AbsorbRateSeven;
+
+            DrawChapterBasic(m_ChapterSeven, "7");
+        }
+        
+        void DrawChapterSevenAlt()
+        {
+            m_SampleCountSeven = EditorGUILayout.IntField("Sample Count", m_SampleCountSeven);
+            m_ChapterSevenAlt.numberOfSamples = m_SampleCountSeven;
+
+            m_AbsorbRateSeven = EditorGUILayout.Slider("Absorb Rate", m_AbsorbRateSeven, 0.05f, 0.95f);
+            m_ChapterSevenAlt.absorbRate = m_AbsorbRateSeven;
+
+            if (!Mathf.Approximately(m_AbsorbRateSeven, m_PreviousAbsorbRateSeven))
+            {
+                m_ChapterSevenAlt.DrawToTexture();
+            }
+
+            m_PreviousAbsorbRateSeven = m_AbsorbRateSeven;
+
+            DrawChapterBasic(m_ChapterSevenAlt, "7 (alt)");
         }
 
         static void DrawChapterBasic<T>(Chapter<T> chapter, string chapterNumber) where T: struct
@@ -95,7 +141,7 @@ namespace RayTracingWeekend
         static void DrawTexture(Texture2D texture)
         {
             var size = Constants.ImageSize;
-            var rect = EditorGUILayout.GetControlRect(GUILayout.Width(size.x * 2), GUILayout.Height(size.y * 2));
+            var rect = EditorGUILayout.GetControlRect(GUILayout.Width(size.x * 4), GUILayout.Height(size.y * 4));
             EditorGUI.DrawPreviewTexture(rect, texture, null, ScaleMode.ScaleToFit);
         }
     }
