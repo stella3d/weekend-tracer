@@ -1,70 +1,64 @@
-﻿using RayTracingWeekend;
-using Unity.Burst;
+﻿using Unity.Burst;
 using Unity.Collections;
 using Unity.Jobs;
 using Unity.Mathematics;
-using UnityEngine;
-using Ray = UnityEngine.Ray;
 
-public class ChapterThree
+namespace RayTracingWeekend
 {
-    public float3 Color(Ray r)
+    public class ChapterThree : Chapter<Color24>
     {
-        float3 unitVector = math.normalize(r.direction);
-        float t = 0.5f * (unitVector.y + 1f);
-        return (1f - t) * Constants.one + t * Constants.blueGradient;
-    }
-    
-    public struct Job : IJob
-    {
-        public int2 size;
-
-        [WriteOnly]
-        public NativeArray<Color24> Pixels;
-
-        public void Execute()
+        [BurstCompile]
+        public struct Job : IJob, IGetPixelBuffer<Color24>
         {
-            var nx = (float) size.x;
-            var ny = (float) size.y;
-            for (float j = 0; j < size.y; j++)
-            {
-                for (float i = 0; i < size.x; i++)
-                {
-                    const float rgbMultiplier = 255.999f;
-                    byte r = (byte)(i / nx * rgbMultiplier);
-                    byte g = (byte)(j / ny * rgbMultiplier);
-                    byte b = (byte)((0.2f) * rgbMultiplier);
+            public int2 size;
 
-                    var index = (int) (j * nx + i);
-                    
-                    Pixels[index] = new Color24(r, g, b);
+            [WriteOnly] public NativeArray<Color24> Pixels;
+
+            public void Execute()
+            {
+                var nx = (float) size.x;
+                var ny = (float) size.y;
+                var lowerLeftCorner = new float3(-2, -1, -1);
+                var horizontal = new float3(4, 0, 0);
+                var vertical = new float3(0, 2, 0);
+                var origin = new float3();
+                for (float j = 0; j < size.y; j++)
+                {
+                    for (float i = 0; i < size.x; i++)
+                    {
+                        float u = i / nx;
+                        float v = j / ny;
+                        Ray r = new Ray(origin, lowerLeftCorner + u * horizontal + v * vertical);
+                        float3 col = Color(r);
+
+                        var index = (int) (j * nx + i);
+                        Pixels[index] = col.ToRgb24();
+                    }
                 }
             }
+
+            public static float3 Color(Ray r)
+            {
+                float3 unitVector = math.normalize(r.direction);
+                float t = 0.5f * (unitVector.y + 1f);
+                return (1f - t) * Constants.one + t * Constants.blueGradient;
+            }
+
+            public NativeArray<Color24> GetPixels()
+            {
+                return Pixels;
+            }
         }
-    }
 
-    static readonly int2 imageSize = new int2(200, 100);
-
-    public JobHandle Handle;
-
-    public Texture2D texture = new Texture2D(imageSize.x, imageSize.y, TextureFormat.RGB24, false);
-    
-    public void WriteTestImage()
-    {
-        var buffer = new NativeArray<Color24>(imageSize.x * imageSize.y, Allocator.Persistent);
-
-        var job = new Job()
+        public void WriteTestImage()
         {
-            size = imageSize,
-            Pixels = buffer
-        };
+            var job = new Job()
+            {
+                size = Constants.ImageSize,
+                Pixels = GetBuffer()
+            };
 
-        Handle = job.Schedule();
-        Handle.Complete();
-        
-        texture.LoadRawTextureData(job.Pixels);
-        texture.Apply();
-        
-        buffer.Dispose();
+            job.RunAndApply<Color24, Job>(texture);
+        }
     }
 }

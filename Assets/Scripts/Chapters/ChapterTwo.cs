@@ -2,11 +2,10 @@
 using Unity.Collections;
 using Unity.Jobs;
 using Unity.Mathematics;
-using UnityEngine;
 
 namespace RayTracingWeekend
 {
-    public class ChapterTwo
+    public class ChapterTwo : Chapter<Color24>
     {
         [BurstCompile]
         public struct Job : IJob, IGetPixelBuffer<Color24>
@@ -38,18 +37,12 @@ namespace RayTracingWeekend
             }
         }
 
-        static readonly int2 imageSize = new int2(200, 100);
-
-        public Texture2D texture = new Texture2D(imageSize.x, imageSize.y, TextureFormat.RGB24, false);
-
         public void WriteTestImage()
         {
-            var buffer = new NativeArray<Color24>(imageSize.x * imageSize.y, Allocator.TempJob);
-
             var job = new Job()
             {
-                size = imageSize,
-                Pixels = buffer
+                size = Constants.ImageSize,
+                Pixels = GetBuffer()
             };
 
             job.RunAndApply<Color24, Job>(texture);

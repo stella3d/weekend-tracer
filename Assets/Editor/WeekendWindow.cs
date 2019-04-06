@@ -7,6 +7,7 @@ namespace RayTracingWeekend
     {
         ChapterOne m_ChapterOne;
         ChapterTwo m_ChapterTwo;
+        ChapterThree m_ChapterThree;
 
         [MenuItem("Window/Tracer")]
         public static void ShowWindow()
@@ -19,6 +20,7 @@ namespace RayTracingWeekend
         {
             m_ChapterOne = new ChapterOne();
             m_ChapterTwo = new ChapterTwo();
+            m_ChapterThree = new ChapterThree();
         }
 
         void OnGUI()
@@ -34,14 +36,18 @@ namespace RayTracingWeekend
                 m_ChapterTwo.WriteTestImage();
 
             DrawTexture(m_ChapterTwo.texture);
+            
+            if (GUILayout.Button("Draw Chapter Three Image"))
+                m_ChapterThree.WriteTestImage();
+
+            DrawTexture(m_ChapterThree.texture);
         }
 
-
-        void DrawTexture(Texture2D texture)
+        static void DrawTexture(Texture2D texture)
         {
-            var rect = EditorGUILayout.GetControlRect(GUILayout.Width(200), GUILayout.Height(100));
-            EditorGUI.DrawPreviewTexture(rect, texture);
+            var size = Constants.ImageSize;
+            var rect = EditorGUILayout.GetControlRect(GUILayout.Width(size.x), GUILayout.Height(size.y));
+            EditorGUI.DrawPreviewTexture(rect, texture, null, ScaleMode.ScaleToFit);
         }
-
     }
 }

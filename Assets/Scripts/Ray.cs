@@ -7,11 +7,15 @@ namespace RayTracingWeekend
         public float3 origin;
         public float3 direction;
 
+        public Ray(float3 origin, float3 direction)
+        {
+            this.origin = origin;
+            this.direction = direction;
+        }
+
         public float3 PointAtParameter(float t)
         {
             return origin + t * direction;
         }
-
-
     }
 }
