@@ -5,7 +5,7 @@ using Unity.Mathematics;
 
 namespace RayTracingWeekend
 {
-    public class ChapterFour : Chapter<Color24>
+    public class ChapterFive : Chapter<Color24>
     {
         public float spherePositionZ = -1f;
         public float3 sphereColor = new float3(1f, 0f, 0f);
@@ -43,23 +43,30 @@ namespace RayTracingWeekend
                 }
             }
 
-            static bool HitSphere(float3 center, float radius, Ray r)
+            static float HitSphere(float3 center, float radius, Ray r)
             {
                 float3 oc = r.origin - center;
                 float a = math.dot(r.direction, r.direction);
                 float b = 2f * math.dot(oc, r.direction);
                 float c = math.dot(oc, oc) - radius * radius;
                 float discriminant = b * b - 4 * a * c;
-                return discriminant > 0f;
+                if (discriminant < 0f)
+                    return -1f;
+                
+                return (-b - math.sqrt(discriminant)) / (2f * a);
             }
 
             public float3 Color(Ray r)
             {
-                if(HitSphere(spherePosition, 0.5f, r))
-                    return sphereColor;
+                float t = HitSphere(spherePosition, 0.5f, r);
+                if (t > 0f)
+                {
+                    float3 n = math.normalize(r.PointAtParameter(t) - new float3(0f, 0f, -1f));
+                    return 0.5f * new float3(n.x + 1f, n.y + 1f, n.z + 1f);
+                }
                 
-                float3 unitVector = math.normalize(r.direction);
-                float t = 0.5f * (unitVector.y + 1f);
+                float3 unitDirection = math.normalize(r.direction);
+                t = 0.5f * (unitDirection.y + 1f);
                 return (1f - t) * Constants.one + t * Constants.blueGradient;
             }
         }

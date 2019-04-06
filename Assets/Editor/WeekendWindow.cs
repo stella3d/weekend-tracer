@@ -10,11 +10,11 @@ namespace RayTracingWeekend
         ChapterTwo m_ChapterTwo;
         ChapterThree m_ChapterThree;
         ChapterFour m_ChapterFour;
+        ChapterFive m_ChapterFive;
 
         // default position and color same as the book
         float m_Chapter4ZPosition = -1f;
         Color32 m_Chapter4Color = Color.red;
-        Color32 m_PreviousChapter4Color = Color.red;
 
         [MenuItem("Window/Tracer")]
         public static void ShowWindow()
@@ -29,6 +29,7 @@ namespace RayTracingWeekend
             m_ChapterTwo = new ChapterTwo();
             m_ChapterThree = new ChapterThree();
             m_ChapterFour = new ChapterFour();
+            m_ChapterFive = new ChapterFive();
         }
 
         void OnGUI()
@@ -39,12 +40,12 @@ namespace RayTracingWeekend
             
             EditorGUILayout.Space();
             DrawChapterFour();
+            
+            DrawChapterBasic(m_ChapterFive, "Five");
         }
 
         void DrawChapterFour()
         {
-            m_PreviousChapter4Color = m_Chapter4Color;
-            
             m_Chapter4ZPosition = EditorGUILayout.Slider("Z Pos", m_Chapter4ZPosition, -5f, -0.75f);
             m_Chapter4Color = EditorGUILayout.ColorField("Color", m_Chapter4Color);
 
