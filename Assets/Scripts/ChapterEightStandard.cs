@@ -8,7 +8,7 @@ using Random = Unity.Mathematics.Random;
 
 namespace RayTracingWeekend
 {
-    public class ChapterEight : Chapter<Color24>
+    public class ChapterEightStandard : Chapter<Color24>
     {
         public int numberOfSamples;
 
@@ -16,7 +16,7 @@ namespace RayTracingWeekend
         public float fuzzinessTwo;
         
         [BurstCompile]
-        public struct Job : IJobParallelFor
+        public struct Job : IJob
         {
             public int maxHits;
             public int2 size;
@@ -27,46 +27,40 @@ namespace RayTracingWeekend
             [ReadOnly] public HitableArray<Sphere> World;
             [WriteOnly] public NativeArray<Color24> Pixels;
 
-            public void Execute(int index)
+            // implementing as a straight translation of the C++ gave me a stack overflow
+            int recursionCounter;
+
+            public void Execute()
             {
                 var nx = (float) size.x;
                 var ny = (float) size.y;
-                var x = index % size.x;
-                var y = (index - x) / nx;
-                float3 col1 = new float3();
-                float3 col2 = new float3();
-                
-                int s = 0;
-                float previousRandomV = random.NextFloat();
-                var iterationCount = math.clamp(numberOfSamples / 2, 0, int.MaxValue);
-                for (; s < iterationCount; s++)
+                for (float j = 0; j < size.y; j++)
                 {
-                    float u = (x + previousRandomV) / nx;
-                    var randomV = random.NextFloat();
-                    float v = (y + randomV) / ny;
-                    previousRandomV = randomV;
-                    Ray r = camera.GetRay(u, v);
-                    col1 += Color(r, World, 0);
-                }
-                for (; s < numberOfSamples; s++)
-                {
-                    float u = (x + previousRandomV) / nx;
-                    var randomV = random.NextFloat();
-                    float v = (y + randomV) / ny;
-                    previousRandomV = randomV;
-                    Ray r = camera.GetRay(u, v);
-                    col2 += Color(r, World, 0);
-                }
+                    for (float i = 0; i < size.x; i++)
+                    {
+                        var index = (int) (j * nx + i);
+                        float3 col = new float3();
+                        for (int s = 0; s < numberOfSamples; s++)
+                        {
+                            float u = (i + random.NextFloat()) / nx;
+                            float v = (j + random.NextFloat()) / ny;
+                            Ray r = camera.GetRay(u, v);
+                            recursionCounter = 0;
+                            col += Color(r, World, 0);
+                        }
 
-                Pixels[index] = ((col1 + col2) / numberOfSamples).ToRgb24();
+                        col /= (float) numberOfSamples;
+                        Pixels[index] = col.ToRgb24();
+                    }
+                }
             }
-            
-            
+
             public float3 Color(Ray r, HitableArray<Sphere> world, int depth)
             {
                 var rec = new HitRecord();
-                if (world.Hit(r, 0.001f, float.MaxValue, ref rec))
+                if (recursionCounter < maxHits && world.Hit(r, 0.001f, float.MaxValue, ref rec))
                 {
+                    recursionCounter++;
                     Ray scattered = new Ray();
                     float3 attenuation = new float3();
                     var albedo = rec.material.albedo;
@@ -110,7 +104,7 @@ namespace RayTracingWeekend
         {
             ScaleTexture(canvasScale);
             
-            var spheres = ExampleSphereSets.DozenVaryingSizeAndMaterial();
+            var spheres = ExampleSphereSets.FourVaryingSize();
             var rand = new Random();
             rand.InitState();
 
@@ -125,9 +119,7 @@ namespace RayTracingWeekend
                 Pixels = GetBuffer(Allocator.TempJob, canvasScale)
             };
             
-            m_Handle = job.Schedule(job.Pixels.Length, 256, m_Handle);
-            m_Handle.Complete();
-            
+            job.Run();
             texture.LoadAndApply(job.Pixels);
             spheres.Dispose();
         }

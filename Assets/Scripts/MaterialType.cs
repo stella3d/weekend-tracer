@@ -1,6 +1,6 @@
 namespace RayTracingWeekend
 {
-    public enum MaterialType
+    public enum MaterialType : short
     {
         Lambertian,
         Metal

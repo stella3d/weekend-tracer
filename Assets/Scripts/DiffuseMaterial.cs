@@ -14,7 +14,9 @@ namespace RayTracingWeekend
             attenuation = albedo;
             return true;
         }
+        
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static bool Scatter(Random rand, float3 albedo, Ray r, HitRecord rec, ref float3 attenuation, ref Ray scattered)
         {
             var target = rec.p + rec.normal + Utils.RandomInUnitSphere(rand);
@@ -36,6 +38,7 @@ namespace RayTracingWeekend
             return math.dot(scattered.direction, rec.normal) > 0;
         }
         
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static bool Scatter(Material m, Ray r, HitRecord rec, Random rand, ref float3 attenuation, ref Ray scattered)
         {
             float3 reflected = Reflect(math.normalize(r.direction), rec.normal);

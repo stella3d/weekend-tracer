@@ -23,7 +23,7 @@ namespace RayTracingWeekend
 
         Vector2 m_ScrollPosition;
 
-        static int s_CanvasScaling = 12;
+        static int s_CanvasScaling = 4;
 
         [MenuItem("Window/Tracer")]
         public static void ShowWindow()

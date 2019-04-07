@@ -1,4 +1,5 @@
 using System;
+using System.Runtime.CompilerServices;
 using Unity.Collections;
 
 namespace RayTracingWeekend
@@ -13,6 +14,7 @@ namespace RayTracingWeekend
             Objects = new NativeArray<T>(count, allocator);
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool Hit(Ray r, float tMin, float tMax, ref HitRecord rec)
         {
             HitRecord tempRecord = new HitRecord();
