@@ -57,9 +57,7 @@ namespace RayTracingWeekend
                     return 0.5f * new float3(rn.x + 1f, rn.y + 1f, rn.z + 1f);
                 }
                 
-                float3 unitDirection = math.normalize(r.direction);
-                var t = 0.5f * (unitDirection.y + 1f);
-                return (1f - t) * Constants.one + t * Constants.blueGradient;
+                return Utils.BackgroundColor(ref r);
             }
         }
 

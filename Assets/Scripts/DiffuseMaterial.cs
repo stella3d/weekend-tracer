@@ -52,5 +52,21 @@ namespace RayTracingWeekend
         {
             return v - 2 * math.dot(v, n) * n;
         }
+        
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static bool Refract(float3 v, float3 n, float niOverNt, out float3 refracted)
+        {
+            float3 uv = math.normalize(v);
+            float dt = math.dot(uv, n);
+            float discriminant = 1f - niOverNt * niOverNt * (1f - dt * dt);
+            if (discriminant > 0f)
+            {
+                refracted = niOverNt * (uv - n * dt) - n * math.sqrt(discriminant);
+                return true;
+            }
+            
+            refracted = default;
+            return false;
+        }
     }
 }

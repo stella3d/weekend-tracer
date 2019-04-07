@@ -38,6 +38,45 @@ namespace RayTracingWeekend
             };
         }
         
+        public static HitableArray<Sphere> FourWithDielectric(Allocator allocator = Allocator.TempJob)
+        {
+            return new HitableArray<Sphere>(4, allocator)
+            {
+                Objects =
+                {
+                    [0] = new Sphere(new float3(0f, 0f, -1f), 0.5f, 
+                        new Material(MaterialType.Lambertian, new float3(0.1f, 0.2f, 0.5f))),
+                    [1] = new Sphere(new float3(0f, -100.5f, -1f), 100f,
+                        new Material(MaterialType.Lambertian, new float3(0.8f, 0.8f, 0.0f))),
+                    [2] = new Sphere(new float3(1f, 0f, -1f), 0.5f,
+                        new Material(MaterialType.Metal, new float3(0.8f, 0.6f, 0.2f))),
+                    [3] = new Sphere(new float3(-1f, 0f, -1f), 0.5f,
+                        new Material(MaterialType.Dielectric, new float3(), 0f, 1.5f)),
+                }
+            };
+        }
+        
+        // this is the set used at the end of chapter 9
+        public static HitableArray<Sphere> FiveWithDielectric(Allocator allocator = Allocator.TempJob)
+        {
+            return new HitableArray<Sphere>(5, allocator)
+            {
+                Objects =
+                {
+                    [0] = new Sphere(new float3(0f, 0f, -1f), 0.5f, 
+                        new Material(MaterialType.Lambertian, new float3(0.1f, 0.2f, 0.5f))),
+                    [1] = new Sphere(new float3(0f, -100.5f, -1f), 100f,
+                        new Material(MaterialType.Lambertian, new float3(0.8f, 0.8f, 0.0f))),
+                    [2] = new Sphere(new float3(1f, 0f, -1f), 0.5f,
+                        new Material(MaterialType.Metal, new float3(0.8f, 0.6f, 0.2f))),
+                    [3] = new Sphere(new float3(-1f, 0f, -1f), 0.5f,
+                        new Material(MaterialType.Dielectric, new float3(), 0f, 1.5f)),
+                    [4] = new Sphere(new float3(-1f, 0f, -1f), -0.45f,
+                        new Material(MaterialType.Dielectric, new float3(), 0f, 1.5f))
+                }
+            };
+        }
+        
         public static HitableArray<Sphere> DozenVaryingSizeAndMaterial(Allocator allocator = Allocator.TempJob)
         {
             var smallFuzz = 0.08f;

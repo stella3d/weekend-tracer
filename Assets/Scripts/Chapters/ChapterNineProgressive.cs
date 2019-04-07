@@ -8,8 +8,7 @@ using Random = Unity.Mathematics.Random;
 
 namespace RayTracingWeekend
 {
-    // TODO - rename things so that this powers chapters from 8 to the end
-    public class ChapterEightProgressive : Chapter<float4>, IDisposable
+    public class ChapterNineProgressive : Chapter<float4>, IDisposable
     {
         public int numberOfSamples;
 
@@ -28,12 +27,12 @@ namespace RayTracingWeekend
         public const int BatchSampleCount = 16;
         public int CompletedSampleCount { get; private set; }
         
-        public ChapterEightProgressive()
+        public ChapterNineProgressive()
         {
             Setup();
         }
 
-        ~ChapterEightProgressive()
+        ~ChapterNineProgressive()
         {
             Dispose(true);
         }
@@ -158,24 +157,9 @@ namespace RayTracingWeekend
             }
         }
 
-        CameraFrame m_CameraFrame = CameraFrame.Default;
-
-        CameraFrame GetChapterTenCamera()
-        {
-            var lookFrom = new float3(-2f, 2f, 1f);
-            var lookAt = new float3(0f, 0f, -1f);
-            var up = new float3(0f, 1f, 0f);
-            const float fov = 90;
-            float aspectRatio = texture.width / (float)texture.height;
-            var frame = new CameraFrame(lookFrom, lookAt, up, fov, aspectRatio);
-            return frame;
-        }
-
         public override void DrawToTexture()
         {
-            var spheres = ExampleSphereSets.FiveWithDielectric();
-            
-            m_CameraFrame = GetChapterTenCamera();
+            var spheres = ExampleSphereSets.DozenVaryingSizeAndMaterial();
 
             for (int i = 0; i < m_JobCount; i++)
             {
@@ -183,7 +167,7 @@ namespace RayTracingWeekend
                 rand.InitState((uint)i + (uint)CompletedSampleCount + 100);
                 var job = new SerialJob()
                 {
-                    camera = m_CameraFrame,
+                    camera = CameraFrame.Default,
                     random = rand,
                     size = Constants.ImageSize * canvasScale,
                     World = spheres,

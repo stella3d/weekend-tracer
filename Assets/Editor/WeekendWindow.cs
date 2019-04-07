@@ -18,7 +18,7 @@ namespace RayTracingWeekend
         ChapterSix m_ChapterSix;
         ChapterSeven m_ChapterSeven;
         ChapterSevenAlternate m_ChapterSevenAlt;
-        ChapterEight m_ChapterEight;
+        ChapterEightParallel m_ChapterEightParallel;
         ChapterEightProgressive m_ChapterEightPro;
 
         // default position and color same as the book
@@ -47,7 +47,7 @@ namespace RayTracingWeekend
             m_ChapterSix = new ChapterSix();
             m_ChapterSeven = new ChapterSeven();
             m_ChapterSevenAlt = new ChapterSevenAlternate();
-            m_ChapterEight = new ChapterEight();
+            m_ChapterEightParallel = new ChapterEightParallel();
             m_ChapterEightPro = new ChapterEightProgressive();
         }
 
@@ -154,17 +154,17 @@ namespace RayTracingWeekend
         
         void DrawChapterEight()
         {
-            m_ChapterEight.canvasScale = s_CanvasScaling;
+            m_ChapterEightParallel.canvasScale = s_CanvasScaling;
             EditorGUILayout.BeginHorizontal();
             EditorGUI.BeginDisabledGroup(true);
-            var texture = m_ChapterEight.texture;
+            var texture = m_ChapterEightParallel.texture;
             var vec = new Vector2Int(texture.width, texture.height);
             EditorGUILayout.Vector2IntField("Canvas Size", vec);
             EditorGUI.EndDisabledGroup();
             EditorGUILayout.EndHorizontal();
             m_SampleCountEight = EditorGUILayout.IntField("Sample Count", m_SampleCountEight);
-            m_ChapterEight.numberOfSamples = m_SampleCountEight;
-            DrawChapterBasic(m_ChapterEight, "8");
+            m_ChapterEightParallel.numberOfSamples = m_SampleCountEight;
+            DrawChapterBasic(m_ChapterEightParallel, "8");
         }
         
         void DrawChapterEightPro()

@@ -82,9 +82,7 @@ namespace RayTracingWeekend
                     return absorbRate * Color(new Ray(rec.p, target - rec.p), world);
                 }
                 
-                float3 unitDirection = math.normalize(r.direction);
-                var t = 0.5f * (unitDirection.y + 1f);
-                return (1f - t) * Constants.one + t * Constants.blueGradient;
+                return Utils.BackgroundColor(ref r);
             }
         }
 
