@@ -9,6 +9,8 @@ namespace RayTracingWeekend
         public Texture2D texture = new Texture2D(Constants.ImageSize.x, Constants.ImageSize.y, 
                                                  TextureFormat.RGB24, false);
 
+        protected int canvasScaling = 8;
+        
         protected NativeArray<TPixel> GetBuffer(Allocator allocator = Allocator.TempJob, int multiplier = 1)
         {
             var x = multiplier * Constants.ImageSize.x;
@@ -16,11 +18,25 @@ namespace RayTracingWeekend
             return new NativeArray<TPixel>(x * y, allocator);
         }
 
+        public Chapter()
+        {
+            Setup();
+        }
+
+        internal virtual void Setup() { }
+
         public abstract void DrawToTexture();
 
         internal void ScaleTexture(int multiplier, TextureFormat format = TextureFormat.RGB24)
         {
             texture = new Texture2D(Constants.ImageSize.x * multiplier, Constants.ImageSize.y * multiplier, 
+                format, false);
+        }
+        
+        public void ScaleTexture(TextureFormat format = TextureFormat.RGB24)
+        {
+            var m = canvasScaling;
+            texture = new Texture2D(Constants.ImageSize.x * m, Constants.ImageSize.y * m, 
                 format, false);
         }
 

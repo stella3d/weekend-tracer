@@ -16,6 +16,7 @@ namespace RayTracingWeekend
         ChapterSeven m_ChapterSeven;
         ChapterSevenAlternate m_ChapterSevenAlt;
         ChapterEight m_ChapterEight;
+        ChapterEightProgressive m_ChapterEightPro;
 
         // default position and color same as the book
         float m_Chapter4ZPosition = -1f;
@@ -23,7 +24,7 @@ namespace RayTracingWeekend
 
         Vector2 m_ScrollPosition;
 
-        static int s_CanvasScaling = 4;
+        static int s_CanvasScaling = 8;
 
         [MenuItem("Window/Tracer")]
         public static void ShowWindow()
@@ -44,6 +45,7 @@ namespace RayTracingWeekend
             m_ChapterSeven = new ChapterSeven();
             m_ChapterSevenAlt = new ChapterSevenAlternate();
             m_ChapterEight = new ChapterEight();
+            m_ChapterEightPro = new ChapterEightProgressive();
         }
 
         void OnGUI()
@@ -64,6 +66,7 @@ namespace RayTracingWeekend
             DrawChapterSeven();
             DrawChapterSevenAlt();
             DrawChapterEight();
+            DrawChapterEightPro();
             
             EditorGUILayout.EndScrollView();
         }
@@ -163,6 +166,33 @@ namespace RayTracingWeekend
             DrawChapterBasic(m_ChapterEight, "8");
         }
         
+        void DrawChapterEightPro()
+        {
+            EditorGUILayout.BeginHorizontal();
+            EditorGUI.BeginDisabledGroup(true);
+            var texture = m_ChapterEightPro.texture;
+            var vec = new Vector2Int(texture.width, texture.height);
+            EditorGUILayout.Vector2IntField("Canvas Size", vec);
+            EditorGUI.EndDisabledGroup();
+            EditorGUILayout.EndHorizontal();
+            
+            EditorGUILayout.LabelField("Sample Count per batch: 16");
+            //m_SampleCountEight = EditorGUILayout.IntField("Sample Count", m_SampleCountEight);
+            //m_ChapterEightPro.numberOfSamples = m_SampleCountEight;
+            DrawChapterBasic(m_ChapterEightPro, "8 Progressive");
+            
+            if (GUILayout.Button($"Draw Progressive Image"))
+                m_ChapterEightPro.DrawToTexture();
+
+            EditorGUILayout.Separator();
+        }
+
+        void DrawExperimental()
+        {
+            
+        }
+
+
         static void DrawChapterBasic<T>(Chapter<T> chapter, string chapterNumber) where T: struct
         {
             if (GUILayout.Button($"Draw Chapter {chapterNumber} Image"))
