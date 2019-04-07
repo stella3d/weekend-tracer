@@ -160,19 +160,6 @@ namespace RayTracingWeekend
             m_SampleCountEight = EditorGUILayout.IntField("Sample Count", m_SampleCountEight);
             m_ChapterEight.numberOfSamples = m_SampleCountEight;
 
-            /*
-            EditorGUILayout.BeginHorizontal();
-            EditorGUILayout.PrefixLabel("fuzziness left");
-            m_ChapterEight.fuzzinessOne = Mathf.Clamp01(EditorGUILayout.DelayedFloatField(m_ChapterEight.fuzzinessOne));
-            EditorGUILayout.PrefixLabel("fuzziness right");
-            m_ChapterEight.fuzzinessTwo = Mathf.Clamp01(EditorGUILayout.DelayedFloatField(m_ChapterEight.fuzzinessTwo));
-            EditorGUILayout.EndHorizontal();
-            */
-
-            m_ChapterEight.fuzzinessOne = 0.1f;
-            m_ChapterEight.fuzzinessTwo = 0.2f;
-
-            
             DrawChapterBasic(m_ChapterEight, "8");
         }
         

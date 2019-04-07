@@ -8,24 +8,20 @@ using Random = Unity.Mathematics.Random;
 
 namespace RayTracingWeekend
 {
-    public class ChapterEight : Chapter<Color24>
+    public class ChapterEight : Chapter<float4>
     {
         public int numberOfSamples;
 
-        public float fuzzinessOne;
-        public float fuzzinessTwo;
-        
         [BurstCompile]
         public struct Job : IJobParallelFor
         {
-            public int maxHits;
             public int2 size;
             public int numberOfSamples;
             public Random random;
             public CameraFrame camera;
             
             [ReadOnly] public HitableArray<Sphere> World;
-            [WriteOnly] public NativeArray<Color24> Pixels;
+            [WriteOnly] public NativeArray<float4> Pixels;
 
             public void Execute(int index)
             {
@@ -33,32 +29,20 @@ namespace RayTracingWeekend
                 var ny = (float) size.y;
                 var x = index % size.x;
                 var y = (index - x) / nx;
-                float3 col1 = new float3();
-                float3 col2 = new float3();
-                
-                int s = 0;
+                float3 col = new float3();
                 float previousRandomV = random.NextFloat();
-                var iterationCount = math.clamp(numberOfSamples / 2, 0, int.MaxValue);
-                for (; s < iterationCount; s++)
+                for (var s = 0; s < numberOfSamples; s++)
                 {
                     float u = (x + previousRandomV) / nx;
                     var randomV = random.NextFloat();
                     float v = (y + randomV) / ny;
                     previousRandomV = randomV;
                     Ray r = camera.GetRay(u, v);
-                    col1 += Color(r, World, 0);
-                }
-                for (; s < numberOfSamples; s++)
-                {
-                    float u = (x + previousRandomV) / nx;
-                    var randomV = random.NextFloat();
-                    float v = (y + randomV) / ny;
-                    previousRandomV = randomV;
-                    Ray r = camera.GetRay(u, v);
-                    col2 += Color(r, World, 0);
+                    col += Color(r, World, 0);
                 }
 
-                Pixels[index] = ((col1 + col2) / numberOfSamples).ToRgb24();
+                col /= numberOfSamples;
+                Pixels[index] = new float4(col.x, col.y, col.z, 1f);
             }
             
             
@@ -108,7 +92,7 @@ namespace RayTracingWeekend
         
         public override void DrawToTexture()
         {
-            ScaleTexture(canvasScale);
+            ScaleTexture(canvasScale, TextureFormat.RGBAFloat);
             
             var spheres = ExampleSphereSets.DozenVaryingSizeAndMaterial();
             var rand = new Random();
@@ -116,13 +100,12 @@ namespace RayTracingWeekend
 
             var job = new Job()
             {
-                maxHits = 50,
                 camera = CameraFrame.Default,
                 numberOfSamples = numberOfSamples,
                 random = rand,
                 size = Constants.ImageSize * canvasScale,
                 World = spheres,
-                Pixels = GetBuffer(Allocator.TempJob, canvasScale)
+                Pixels = GetBuffer(Allocator.Persistent, canvasScale)
             };
             
             m_Handle = job.Schedule(job.Pixels.Length, 256, m_Handle);
