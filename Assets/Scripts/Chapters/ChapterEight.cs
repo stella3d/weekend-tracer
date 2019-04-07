@@ -86,9 +86,9 @@ namespace RayTracingWeekend
             }
         }
 
-        public int canvasScale { get; set; }
-
         JobHandle m_Handle;
+
+        public int canvasScale { get; set; }
         
         public override void DrawToTexture()
         {

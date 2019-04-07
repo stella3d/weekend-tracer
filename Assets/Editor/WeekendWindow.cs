@@ -1,4 +1,7 @@
-﻿using Unity.Mathematics;
+﻿using System.Collections;
+using TMPro;
+using Unity.EditorCoroutines.Editor;
+using Unity.Mathematics;
 using UnityEditor;
 using UnityEngine;
 
@@ -159,32 +162,76 @@ namespace RayTracingWeekend
             EditorGUILayout.Vector2IntField("Canvas Size", vec);
             EditorGUI.EndDisabledGroup();
             EditorGUILayout.EndHorizontal();
-            
             m_SampleCountEight = EditorGUILayout.IntField("Sample Count", m_SampleCountEight);
             m_ChapterEight.numberOfSamples = m_SampleCountEight;
-
             DrawChapterBasic(m_ChapterEight, "8");
         }
         
         void DrawChapterEightPro()
         {
+            if (m_ChapterEightPro == null)
+            {
+                m_ChapterEightPro = new ChapterEightProgressive();
+                return;
+            }
+
+            EditorGUILayout.Space();
+            EditorGUILayout.Space();
+            var completedStyle = new GUIStyle(EditorStyles.boldLabel);
+            completedStyle.fontSize = 18;
+            var totalStyle = new GUIStyle(EditorStyles.numberField);
+            totalStyle.fontSize = 18;
+            totalStyle.fontStyle = FontStyle.Bold;
+            
+            var forceHeight = GUILayout.Height(36);
+            
             EditorGUILayout.BeginHorizontal();
             EditorGUI.BeginDisabledGroup(true);
-            var texture = m_ChapterEightPro.texture;
-            var vec = new Vector2Int(texture.width, texture.height);
-            EditorGUILayout.Vector2IntField("Canvas Size", vec);
+            string label = "";
+            if ( m_ChapterEightPro.texture != null)
+            {
+                var texture = m_ChapterEightPro.texture;
+                label = $"Canvas Size:   {new Vector2Int(texture.width, texture.height)}";
+            }
+
+            EditorGUILayout.LabelField(label, completedStyle, forceHeight);
             EditorGUI.EndDisabledGroup();
             EditorGUILayout.EndHorizontal();
-            
-            EditorGUILayout.LabelField("Sample Count per batch: 16");
-            //m_SampleCountEight = EditorGUILayout.IntField("Sample Count", m_SampleCountEight);
-            //m_ChapterEightPro.numberOfSamples = m_SampleCountEight;
-            DrawChapterBasic(m_ChapterEightPro, "8 Progressive");
-            
-            if (GUILayout.Button($"Draw Progressive Image"))
-                m_ChapterEightPro.DrawToTexture();
+            EditorGUILayout.LabelField("Sample Count", EditorStyles.boldLabel); 
+            EditorGUILayout.BeginHorizontal(forceHeight, GUILayout.ExpandHeight(true));
 
+            m_SampleCountEight = EditorGUILayout.IntField("Total", m_SampleCountEight, totalStyle, forceHeight);
+            
+            EditorGUILayout.LabelField("Completed: " + m_ChapterEightPro.CompletedSampleCount, completedStyle,
+                forceHeight);
+            EditorGUILayout.EndHorizontal();
+            EditorGUILayout.Space();
+
+            if (GUILayout.Button($"Draw Progressive Image"))
+            {
+                lastTime = Time.time - 0.64f;
+                EditorCoroutineUtility.StartCoroutine(ProgressiveRoutine(), this);
+            }
+            
+            DrawTexture(m_ChapterEightPro.texture);
             EditorGUILayout.Separator();
+            EditorGUILayout.Separator();
+        }
+
+        float lastTime;
+        
+        IEnumerator ProgressiveRoutine()
+        {
+            if (Time.time - lastTime < 0.64f)
+                yield return null;
+            
+            for (int i = 0; i < m_SampleCountEight / 8; i++)
+            {
+                m_ChapterEightPro.DrawToTexture();
+                Repaint();
+                lastTime = Time.time;
+                yield return null;
+            }
         }
 
         void DrawExperimental()

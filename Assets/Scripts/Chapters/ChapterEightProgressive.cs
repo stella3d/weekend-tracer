@@ -1,6 +1,7 @@
 ﻿using System;
 using Unity.Burst;
 using Unity.Collections;
+using Unity.EditorCoroutines.Editor;
 using Unity.Jobs;
 using Unity.Mathematics;
 using UnityEngine;
@@ -216,8 +217,8 @@ namespace RayTracingWeekend
 
 
         public const int BatchSampleCount = 16;
-        int m_CompletedSampleCount;
-        
+        public int CompletedSampleCount { get; private set; }
+
         JobHandle m_Handle;
 
         public ChapterEightProgressive()
@@ -230,9 +231,12 @@ namespace RayTracingWeekend
             Dispose(true);
         }
 
+        EditorCoroutine m_CoRoutine;
+
         internal override void Setup()
         {
-            var i = canvasScale == 0 ? canvasScale = 12 : canvasScale = canvasScale;
+            Dispose();
+            var i = canvasScale == 0 ? canvasScale = 8 : canvasScale = canvasScale;
             ScaleTexture(canvasScale, TextureFormat.RGBAFloat);
             BatchTexture = new Texture2D(texture.width, texture.height, texture.format, false);
             var length = texture.height * texture.width;
@@ -244,7 +248,7 @@ namespace RayTracingWeekend
                 m_BatchBuffers[j] = new NativeArray<float4>(length, Allocator.Persistent);
             }
 
-            m_CompletedSampleCount = 0;
+            CompletedSampleCount = 0;
         }
 
         int m_JobCount = 8;
@@ -259,7 +263,7 @@ namespace RayTracingWeekend
             {
                 var rand = new Random();
                 rand.InitState();
-                rand.InitState((uint)i + (uint)m_CompletedSampleCount + 100);
+                rand.InitState((uint)i + (uint)CompletedSampleCount + 100);
                 var job = new SerialJob()
                 {
                     camera = CameraFrame.Default,
@@ -274,7 +278,7 @@ namespace RayTracingWeekend
 
             var combineJob = new CombineJobEight()
             {
-                CompletedSampleCount = m_CompletedSampleCount,
+                CompletedSampleCount = CompletedSampleCount,
                 In1 = m_BatchBuffers[0],
                 In2 = m_BatchBuffers[1],
                 In3 = m_BatchBuffers[2],
@@ -293,7 +297,7 @@ namespace RayTracingWeekend
             m_Handle = combineJob.Schedule(combineJob.In1.Length, 1024, batchHandle);
             m_Handle.Complete();
 
-            m_CompletedSampleCount += m_JobCount;
+            CompletedSampleCount += m_JobCount;
             //BatchTexture.LoadAndApply(m_BatchBuffers[0], false);
             texture.LoadAndApply(m_TextureBuffer, false);
             spheres.Dispose();
@@ -308,8 +312,10 @@ namespace RayTracingWeekend
             }
             if (disposing)
             {
-                m_TextureBuffer.Dispose();
-                m_BatchHandles.Dispose();
+                if(m_TextureBuffer.IsCreated)
+                    m_TextureBuffer.Dispose();
+                if(m_BatchHandles.IsCreated)
+                    m_BatchHandles.Dispose();
             }
         }
 
