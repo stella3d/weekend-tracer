@@ -1,4 +1,5 @@
 using Unity.Collections;
+using Unity.Mathematics;
 using UnityEngine;
 
 namespace RayTracingWeekend
@@ -17,10 +18,16 @@ namespace RayTracingWeekend
 
         public abstract void DrawToTexture();
 
-        protected void ScaleTexture(int multiplier)
+        internal void ScaleTexture(int multiplier, TextureFormat format = TextureFormat.RGB24)
         {
             texture = new Texture2D(Constants.ImageSize.x * multiplier, Constants.ImageSize.y * multiplier, 
-                TextureFormat.RGB24, false);
+                format, false);
+        }
+
+        protected void SetTexture(int2 size, TextureFormat format)
+        {
+            texture = new Texture2D(size.x, size.y, 
+                format, false);
         }
     }
 }

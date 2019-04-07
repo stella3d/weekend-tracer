@@ -7,53 +7,49 @@ using Random = Unity.Mathematics.Random;
 
 namespace RayTracingWeekend
 {
-    public class ChapterSevenAlternate : Chapter<Color24>
+    public class ChapterSevenAlternate : Chapter<float4>
     {
         public int numberOfSamples;
         public float absorbRate;
-        
-        //[BurstCompile]
-        public struct Job : IJob
+
+        JobHandle m_Handle;
+        int m_CanvasScale = 4;
+
+        [BurstCompile]
+        public struct AllSamplesJob : IJobParallelFor
         {
             public float absorbRate;
-            
             public int maxHits;
-            
             public int2 size;
-
             public int numberOfSamples;
-
             public Random random;
-
             public CameraFrame camera;
             
             [ReadOnly] public HitableArray<Sphere> World;
+            [WriteOnly] public NativeArray<float4> Pixels;
             
-            [WriteOnly] public NativeArray<Color24> Pixels;
+            int recursionCounter;
 
-            public void Execute()
+            public void Execute(int index)
             {
                 var nx = (float) size.x;
                 var ny = (float) size.y;
-                for (float j = 0; j < size.y; j++)
-                {
-                    for (float i = 0; i < size.x; i++)
-                    {
-                        var index = (int) (j * nx + i);
-                        float3 col = new float3();
-                        for (int s = 0; s < numberOfSamples; s++)
-                        {
-                            float u = (i + random.NextFloat()) / nx;
-                            float v = (j + random.NextFloat()) / ny;
-                            Ray r = camera.GetRay(u, v);
-                            recursionCounter = 0;
-                            col += Color(r, World);
-                        }
+                var i = index % size.x;
+                var j = (index - i) / nx;
 
-                        col /= (float)numberOfSamples;
-                        Pixels[index] = col.ToRgb24();
-                    }
+                float3 sum = new float3();
+                for (int s = 0; s < numberOfSamples; s++)
+                {
+                    float u = (i + random.NextFloat()) / nx;
+                    float v = (j + random.NextFloat()) / ny;
+                    Ray r = camera.GetRay(u, v);
+                
+                    recursionCounter = 0;
+                    sum += Color(r, World);
                 }
+
+                var av = sum / numberOfSamples;
+                Pixels[index] = new float4(av.x, av.y, av.z, 1f);
             }
 
             float3 RandomInUnitSphere()
@@ -69,13 +65,10 @@ namespace RayTracingWeekend
                 return p;
             }
 
-            // implementing as a straight translation of the C++ gave me a stack overflow
-            int recursionCounter;
-
             public float3 Color(Ray r, HitableArray<Sphere> world)
             {
                 var rec = new HitRecord();
-                if (recursionCounter < 4 && world.Hit(r, 0.001f, float.MaxValue, ref rec))
+                if (recursionCounter < maxHits && world.Hit(r, 0.001f, float.MaxValue, ref rec))
                 {
                     recursionCounter++;
                     var target = rec.p + rec.normal + RandomInUnitSphere();
@@ -88,38 +81,36 @@ namespace RayTracingWeekend
             }
         }
 
-        int m_CanvasScale = 4;
+
+        public int canvasScale
+        {
+            get => m_CanvasScale = 8;
+            set => m_CanvasScale = value;
+        }
 
         public override void DrawToTexture()
         {
-            ScaleTexture(m_CanvasScale);
-            var spheres = new HitableArray<Sphere>(4, Allocator.TempJob)
-            {
-                Objects =
-                {
-                    [0] = new Sphere(new float3(0.5f, 0f, -2f), 0.5f),
-                    [1] = new Sphere(new float3(-1.5f, 0f, -1.5f), 0.5f),
-                    [2] = new Sphere(new float3(1.2f, -0.375f, -1.5f), 0.125f),
-                    [3] = new Sphere(new float3(0f, -100.5f, -1f), 100f)
-                }
-            };
+            ScaleTexture(canvasScale, TextureFormat.RGBAFloat);
+            var spheres = ExampleSphereSets.FourVaryingSize();
             
             var rand = new Random();
             rand.InitState();
 
-            var job = new Job()
+            var job = new AllSamplesJob()
             {
                 absorbRate = absorbRate,
-                maxHits = 16,
+                maxHits = 32,
                 camera = CameraFrame.Default,
                 numberOfSamples = numberOfSamples,
                 random = rand,
-                size = Constants.ImageSize * m_CanvasScale,
+                size = Constants.ImageSize * canvasScale,
                 World = spheres,
-                Pixels = GetBuffer(Allocator.TempJob, m_CanvasScale)
+                Pixels = GetBuffer(Allocator.TempJob, canvasScale)
             };
             
-            job.Run();
+            m_Handle = job.Schedule(job.Pixels.Length, 64, m_Handle);
+            m_Handle.Complete();            
+            
             texture.LoadAndApply(job.Pixels);
             spheres.Dispose();
         }

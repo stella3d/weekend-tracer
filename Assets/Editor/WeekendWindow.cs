@@ -14,6 +14,7 @@ namespace RayTracingWeekend
         ChapterFiveTwo m_ChapterFiveTwo;
         ChapterSix m_ChapterSix;
         ChapterSeven m_ChapterSeven;
+        ChapterSevenAlternate m_ChapterSevenAlt;
         ChapterEight m_ChapterEight;
 
         // default position and color same as the book
@@ -21,6 +22,8 @@ namespace RayTracingWeekend
         Color32 m_Chapter4Color = Color.red;
 
         Vector2 m_ScrollPosition;
+
+        static int s_CanvasScaling = 12;
 
         [MenuItem("Window/Tracer")]
         public static void ShowWindow()
@@ -39,6 +42,7 @@ namespace RayTracingWeekend
             m_ChapterFiveTwo = new ChapterFiveTwo();
             m_ChapterSix = new ChapterSix();
             m_ChapterSeven = new ChapterSeven();
+            m_ChapterSevenAlt = new ChapterSevenAlternate();
             m_ChapterEight = new ChapterEight();
         }
 
@@ -58,6 +62,7 @@ namespace RayTracingWeekend
 
             DrawChapterSix();
             DrawChapterSeven();
+            DrawChapterSevenAlt();
             DrawChapterEight();
             
             EditorGUILayout.EndScrollView();
@@ -87,7 +92,6 @@ namespace RayTracingWeekend
         float m_PreviousAbsorbRateSeven = 0.5f;
         
         int m_SampleCountEight = 16;
-        float m_PreviousAbsorbRateEight = 0.5f;
 
         
         void DrawChapterSix()
@@ -114,17 +118,60 @@ namespace RayTracingWeekend
             DrawChapterBasic(m_ChapterSeven, "7");
         }
         
+        
+        
+        void DrawChapterSevenAlt()
+        {
+            EditorGUILayout.BeginHorizontal();
+            EditorGUI.BeginDisabledGroup(true);
+            var texture = m_ChapterSevenAlt.texture;
+            var vec = new Vector2Int(texture.width, texture.height);
+            EditorGUILayout.Vector2IntField("Canvas Size", vec);
+            EditorGUI.EndDisabledGroup();
+            EditorGUILayout.EndHorizontal();
+            
+            m_SampleCountSeven = EditorGUILayout.IntField("Sample Count", m_SampleCountSeven);
+            m_ChapterSevenAlt.numberOfSamples = m_SampleCountSeven;
+
+            m_AbsorbRateSeven = EditorGUILayout.Slider("Absorb Rate", m_AbsorbRateSeven, 0.05f, 0.95f);
+            m_ChapterSevenAlt.absorbRate = m_AbsorbRateSeven;
+            
+            if (!Mathf.Approximately(m_AbsorbRateSeven, m_PreviousAbsorbRateSeven))
+            {
+                m_ChapterSevenAlt.canvasScale = s_CanvasScaling;
+                m_ChapterSevenAlt.DrawToTexture();
+            }
+
+            m_PreviousAbsorbRateSeven = m_AbsorbRateSeven;
+            DrawChapterBasic(m_ChapterSevenAlt, "7");
+        }
+        
         void DrawChapterEight()
         {
+            m_ChapterEight.canvasScale = s_CanvasScaling;
+            EditorGUILayout.BeginHorizontal();
+            EditorGUI.BeginDisabledGroup(true);
+            var texture = m_ChapterEight.texture;
+            var vec = new Vector2Int(texture.width, texture.height);
+            EditorGUILayout.Vector2IntField("Canvas Size", vec);
+            EditorGUI.EndDisabledGroup();
+            EditorGUILayout.EndHorizontal();
+            
             m_SampleCountEight = EditorGUILayout.IntField("Sample Count", m_SampleCountEight);
             m_ChapterEight.numberOfSamples = m_SampleCountEight;
 
+            /*
             EditorGUILayout.BeginHorizontal();
             EditorGUILayout.PrefixLabel("fuzziness left");
             m_ChapterEight.fuzzinessOne = Mathf.Clamp01(EditorGUILayout.DelayedFloatField(m_ChapterEight.fuzzinessOne));
             EditorGUILayout.PrefixLabel("fuzziness right");
             m_ChapterEight.fuzzinessTwo = Mathf.Clamp01(EditorGUILayout.DelayedFloatField(m_ChapterEight.fuzzinessTwo));
             EditorGUILayout.EndHorizontal();
+            */
+
+            m_ChapterEight.fuzzinessOne = 0.1f;
+            m_ChapterEight.fuzzinessTwo = 0.2f;
+
             
             DrawChapterBasic(m_ChapterEight, "8");
         }
@@ -141,7 +188,7 @@ namespace RayTracingWeekend
         static void DrawTexture(Texture2D texture)
         {
             var size = Constants.ImageSize;
-            var rect = EditorGUILayout.GetControlRect(GUILayout.Width(size.x * 4), GUILayout.Height(size.y * 4));
+            var rect = EditorGUILayout.GetControlRect(GUILayout.Width(size.x * s_CanvasScaling), GUILayout.Height(size.y * s_CanvasScaling));
             EditorGUI.DrawPreviewTexture(rect, texture, null, ScaleMode.ScaleToFit);
         }
     }
