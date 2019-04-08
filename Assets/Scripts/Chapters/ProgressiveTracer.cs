@@ -9,7 +9,7 @@ using Random = Unity.Mathematics.Random;
 namespace RayTracingWeekend
 {
     // TODO - rename things so that this powers chapters from 8 to the end
-    public class ChapterEightProgressive : Chapter<float4>, IDisposable
+    public class ProgressiveTracer : Chapter<float4>, IDisposable
     {
         public int numberOfSamples;
 
@@ -24,16 +24,17 @@ namespace RayTracingWeekend
         JobHandle m_Handle;
         
         public int canvasScale { get; set; }
+        public float fieldOfView { get; set; }
 
         public const int BatchSampleCount = 16;
         public int CompletedSampleCount { get; private set; }
         
-        public ChapterEightProgressive()
+        public ProgressiveTracer()
         {
             Setup();
         }
 
-        ~ChapterEightProgressive()
+        ~ProgressiveTracer()
         {
             Dispose(true);
         }
@@ -42,7 +43,7 @@ namespace RayTracingWeekend
         {
             Dispose();
             // TODO - fix the scaling setup
-            var i = canvasScale == 0 ? canvasScale = 8 : canvasScale = canvasScale;
+            var i = canvasScale == 0 ? canvasScale = 6 : canvasScale = canvasScale;
             ScaleTexture(canvasScale, TextureFormat.RGBAFloat);
             var length = texture.height * texture.width;
             m_BatchHandles = new NativeArray<JobHandle>(8, Allocator.Persistent);
@@ -165,7 +166,7 @@ namespace RayTracingWeekend
             var lookFrom = new float3(-2f, 2f, 1f);
             var lookAt = new float3(0f, 0f, -1f);
             var up = new float3(0f, 1f, 0f);
-            const float fov = 90;
+            float fov = fieldOfView > 10f ? fieldOfView : 90f;
             float aspectRatio = texture.width / (float)texture.height;
             var frame = new CameraFrame(lookFrom, lookAt, up, fov, aspectRatio);
             return frame;

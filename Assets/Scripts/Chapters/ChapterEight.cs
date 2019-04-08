@@ -101,7 +101,6 @@ namespace RayTracingWeekend
         public override void DrawToTexture()
         {
             ScaleTexture(canvasScale);
-            
             var spheres = ExampleSphereSets.FourVaryingSize();
             var rand = new Random();
             rand.InitState();

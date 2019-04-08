@@ -19,7 +19,7 @@ namespace RayTracingWeekend
         ChapterSeven m_ChapterSeven;
         ChapterSevenAlternate m_ChapterSevenAlt;
         ChapterEightParallel m_ChapterEightParallel;
-        ChapterEightProgressive m_ChapterEightPro;
+        ProgressiveTracer m_Pro;
 
         // default position and color same as the book
         float m_Chapter4ZPosition = -1f;
@@ -27,7 +27,7 @@ namespace RayTracingWeekend
 
         Vector2 m_ScrollPosition;
 
-        static int s_CanvasScaling = 8;
+        static int s_CanvasScaling = 6;
 
         [MenuItem("Window/Tracer")]
         public static void ShowWindow()
@@ -48,7 +48,7 @@ namespace RayTracingWeekend
             m_ChapterSeven = new ChapterSeven();
             m_ChapterSevenAlt = new ChapterSevenAlternate();
             m_ChapterEightParallel = new ChapterEightParallel();
-            m_ChapterEightPro = new ChapterEightProgressive();
+            m_Pro = new ProgressiveTracer();
         }
 
         void OnGUI()
@@ -70,6 +70,11 @@ namespace RayTracingWeekend
             DrawChapterSevenAlt();
             DrawChapterEight();
             DrawChapterEightPro();
+            
+            EditorGUILayout.Space();
+            EditorGUILayout.Space();
+
+            DrawChapterTen();
             
             EditorGUILayout.EndScrollView();
         }
@@ -169,9 +174,9 @@ namespace RayTracingWeekend
         
         void DrawChapterEightPro()
         {
-            if (m_ChapterEightPro == null)
+            if (m_Pro == null)
             {
-                m_ChapterEightPro = new ChapterEightProgressive();
+                m_Pro = new ProgressiveTracer();
                 return;
             }
 
@@ -188,9 +193,9 @@ namespace RayTracingWeekend
             EditorGUILayout.BeginHorizontal();
             EditorGUI.BeginDisabledGroup(true);
             string label = "";
-            if ( m_ChapterEightPro.texture != null)
+            if ( m_Pro.texture != null)
             {
-                var texture = m_ChapterEightPro.texture;
+                var texture = m_Pro.texture;
                 label = $"Canvas Size:   {new Vector2Int(texture.width, texture.height)}";
             }
 
@@ -202,7 +207,7 @@ namespace RayTracingWeekend
 
             m_SampleCountEight = EditorGUILayout.IntField("Total", m_SampleCountEight, totalStyle, forceHeight);
             
-            EditorGUILayout.LabelField("Completed: " + m_ChapterEightPro.CompletedSampleCount, completedStyle,
+            EditorGUILayout.LabelField("Completed: " + m_Pro.CompletedSampleCount, completedStyle,
                 forceHeight);
             EditorGUILayout.EndHorizontal();
             EditorGUILayout.Space();
@@ -213,30 +218,94 @@ namespace RayTracingWeekend
                 EditorCoroutineUtility.StartCoroutine(ProgressiveRoutine(), this);
             }
             
-            DrawTexture(m_ChapterEightPro.texture);
+            DrawTexture(m_Pro.texture);
+            EditorGUILayout.Separator();
+            EditorGUILayout.Separator();
+        }
+
+        float m_ChapterTenFov = 90;
+        float m_PreviousTenFov = 90;
+        
+        void DrawChapterTen()
+        {
+            if (m_Pro == null)
+            {
+                m_Pro = new ProgressiveTracer();
+                return;
+            }
+
+            EditorGUILayout.Space();
+            EditorGUILayout.Space();
+            var completedStyle = new GUIStyle(EditorStyles.boldLabel);
+            completedStyle.fontSize = 18;
+            var totalStyle = new GUIStyle(EditorStyles.numberField);
+            totalStyle.fontSize = 18;
+            totalStyle.fontStyle = FontStyle.Bold;
+            var forceHeight = GUILayout.Height(36);
+            
+            EditorGUILayout.BeginHorizontal();
+            EditorGUI.BeginDisabledGroup(true);
+            string label = "";
+            if ( m_Pro.texture != null)
+            {
+                var texture = m_Pro.texture;
+                label = $"Canvas Size:   {new Vector2Int(texture.width, texture.height)}";
+            }
+
+            EditorGUILayout.LabelField(label, completedStyle, forceHeight);
+            EditorGUI.EndDisabledGroup();
+            EditorGUILayout.EndHorizontal();
+            
+            m_ChapterTenFov = EditorGUILayout.Slider("Field of View", m_ChapterTenFov, 10f, 180f);
+            if (math.abs(m_ChapterTenFov - m_PreviousTenFov) > 1f || lastFovChangeTime > 1f)
+            {
+                Debug.Log("schedule");
+                m_PreviousTenFov = m_ChapterTenFov;
+                lastFovChangeTime = Time.time;
+                m_Pro.fieldOfView = m_ChapterTenFov;
+                lastTime = Time.time - 0.64f;
+                EditorCoroutineUtility.StartCoroutine(ProgressiveRoutine(8), this);
+            }
+
+            EditorGUILayout.LabelField("Sample Count", EditorStyles.boldLabel); 
+            EditorGUILayout.BeginHorizontal(forceHeight, GUILayout.ExpandHeight(true));
+
+            m_SampleCountEight = EditorGUILayout.IntField("Total", m_SampleCountEight, totalStyle, forceHeight);
+            
+            EditorGUILayout.LabelField("Completed: " + m_Pro.CompletedSampleCount, completedStyle,
+                forceHeight);
+            EditorGUILayout.EndHorizontal();
+            EditorGUILayout.Space();
+
+            if (GUILayout.Button($"Draw Image"))
+            {
+                lastTime = Time.time - 0.64f;
+                EditorCoroutineUtility.StartCoroutine(ProgressiveRoutine(), this);
+            }
+            
+            DrawTexture(m_Pro.texture);
             EditorGUILayout.Separator();
             EditorGUILayout.Separator();
         }
 
         float lastTime;
+        float lastFovChangeTime;
         
-        IEnumerator ProgressiveRoutine()
+        IEnumerator ProgressiveRoutine(int count = 0)
         {
             if (Time.time - lastTime < 0.64f)
                 yield return null;
+
+            if (count == 0)
+                count = m_SampleCountEight;
             
-            for (int i = 0; i < m_SampleCountEight / 8; i++)
+            for (int i = 0; i < count / 8; i++)
             {
-                m_ChapterEightPro.DrawToTexture();
+                m_Pro.DrawToTexture();
                 Repaint();
                 lastTime = Time.time;
                 yield return null;
             }
-        }
-
-        void DrawExperimental()
-        {
-            
         }
 
 
