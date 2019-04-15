@@ -9,7 +9,7 @@ using Random = Unity.Mathematics.Random;
 namespace RayTracingWeekend
 {
     // TODO - rename things so that this powers chapters from 8 to the end
-    public class ProgressiveTracer : Chapter<float4>, IDisposable
+    public class BatchedTracer : Chapter<float4>, IDisposable
     {
         public int numberOfSamples;
 
@@ -29,12 +29,12 @@ namespace RayTracingWeekend
         public const int BatchSampleCount = 16;
         public int CompletedSampleCount { get; private set; }
         
-        public ProgressiveTracer()
+        public BatchedTracer()
         {
             Setup();
         }
 
-        ~ProgressiveTracer()
+        ~BatchedTracer()
         {
             Dispose(true);
         }
@@ -55,6 +55,80 @@ namespace RayTracingWeekend
             }
 
             CompletedSampleCount = 0;
+        }
+        
+        [BurstCompile]
+        public struct SerialJobWithFocus : IJob
+        {
+            public int2 size;
+            public Random random;
+            public CameraFrame camera;
+
+            [ReadOnly] public HitableArray<Sphere> World;
+            [WriteOnly] public NativeArray<float3> Pixels;
+
+            public void Execute()
+            {
+                var nx = (float) size.x;
+                var ny = (float) size.y;
+                for (float j = 0; j < size.y; j++)
+                {
+                    for (float i = 0; i < size.x; i++)
+                    {
+                        var index = (int) (j * nx + i);
+                        float u = (i + random.NextFloat()) / nx;
+                        float v = (j + random.NextFloat()) / ny;
+                        Ray r = camera.GetRay(u, v, random);
+                        Pixels[index] = Color(r, World, 0);
+                    }
+                }
+            }
+            
+            public float3 Color(Ray r, HitableArray<Sphere> world, int depth)
+            {
+                var rec = new HitRecord();
+                if (world.Hit(r, 0.001f, float.MaxValue, ref rec))
+                {
+                    Ray scattered = new Ray();
+                    float3 attenuation = new float3();
+                    var albedo = rec.material.albedo;
+                    if (depth < 50)
+                    {
+                        switch (rec.material.type)
+                        {
+                            // TODO - put this switch inside a static Material.Scatter() method ?
+                            // also TODO - make the scatter API the same across types
+                            case MaterialType.Lambertian:
+                                if (DiffuseMaterial.Scatter(random, albedo,
+                                    r, rec, ref attenuation, ref scattered))
+                                {
+                                    return attenuation * Color(scattered, world, depth + 1);
+                                }
+                                break;
+                            case MaterialType.Metal:
+                                if (MetalMaterial.Scatter(rec.material,
+                                    r, rec, random, ref attenuation, ref scattered))
+                                {
+                                    return attenuation * Color(scattered, world, depth + 1);
+                                }
+                                break;
+                            case MaterialType.Dielectric:
+                                if (Utils.DielectricScatter(random, rec.material.refractionIndex,
+                                    r, rec, ref attenuation, ref scattered))
+                                {
+                                    return attenuation * Color(scattered, world, depth + 1);
+                                }
+                                break;
+                        }
+                    }
+                    else
+                    {
+                        return new float3();
+                    }
+                }
+
+                return Utils.BackgroundColor(ref r);
+            }
         }
 
         [BurstCompile]
@@ -83,7 +157,7 @@ namespace RayTracingWeekend
                     }
                 }
             }
-            
+
             public float3 Color(Ray r, HitableArray<Sphere> world, int depth)
             {
                 var rec = new HitRecord();
@@ -138,23 +212,35 @@ namespace RayTracingWeekend
             var lookFrom = new float3(-2f, 2f, 1f);
             var lookAt = new float3(0f, 0f, -1f);
             var up = new float3(0f, 1f, 0f);
-            float fov = fieldOfView > 10f ? fieldOfView : 90f;
+            float fov = 90f;
             float aspectRatio = texture.width / (float)texture.height;
             var frame = new CameraFrame(lookFrom, lookAt, up, fov, aspectRatio);
+            return frame;
+        }
+        
+        CameraFrame GetChapterElevenCamera()
+        {
+            var lookFrom = new float3(3f, 3f, 2f);
+            var lookAt = new float3(0f, 0f, -1f);
+            var distToFocus = math.length(lookFrom - lookAt);
+            var aperture = 2f;
+            var up = new float3(0f, 1f, 0f);
+            float fov = 20f;
+            float aspectRatio = texture.width / (float)texture.height;
+            var frame = new CameraFrame(lookFrom, lookAt, up, fov, aspectRatio, aperture, distToFocus);
             return frame;
         }
 
         public override void DrawToTexture()
         {
             var spheres = ExampleSphereSets.FiveWithDielectric();
-            
-            m_CameraFrame = GetChapterTenCamera();
+            m_CameraFrame = GetChapterElevenCamera();
 
             for (int i = 0; i < m_JobCount; i++)
             {
                 var rand = new Random();
                 rand.InitState((uint)i + (uint)CompletedSampleCount + 100);
-                var job = new SerialJob()
+                var job = new SerialJobWithFocus()
                 {
                     camera = m_CameraFrame,
                     random = rand,

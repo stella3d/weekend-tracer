@@ -66,13 +66,13 @@ namespace RayTracingWeekend
                     [0] = new Sphere(new float3(0f, 0f, -1f), 0.5f, 
                         new Material(MaterialType.Lambertian, new float3(0.1f, 0.2f, 0.5f))),
                     [1] = new Sphere(new float3(0f, -100.5f, -1f), 100f,
-                        new Material(MaterialType.Lambertian, new float3(0.4f, 0.6f, 0.4f))),
+                        new Material(MaterialType.Lambertian, new float3(0.8f, 0.8f, 0f))),
                     [2] = new Sphere(new float3(1f, 0f, -1f), 0.5f,
                         new Material(MaterialType.Metal, new float3(0.8f, 0.6f, 0.2f))),
                     [3] = new Sphere(new float3(-1f, 0f, -1f), 0.5f,
-                        new Material(MaterialType.Dielectric, new float3(), 0f, 1.5f)),
+                        new Material(MaterialType.Dielectric, float3.zero, 0f, 1.5f)),
                     [4] = new Sphere(new float3(-1f, 0f, -1f), -0.45f,
-                        new Material(MaterialType.Dielectric, new float3(), 0f, 1.5f))
+                        new Material(MaterialType.Dielectric, float3.zero, 0f, 1.5f))
                 }
             };
         }

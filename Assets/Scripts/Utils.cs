@@ -20,6 +20,18 @@ namespace RayTracingWeekend
             return p;
         }
         
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static float3 RandomInUnitDisk(this Random rand)
+        {
+            float3 p;
+            float3 one = new float3(1f, 1f, 0f);
+            do
+            {
+                p = 2f * new float3(rand.NextFloat(), rand.NextFloat(), 0f) - one;
+            } 
+            while (math.dot(p, p) >= 1f);
+            return p;
+        }
         
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static float3 BackgroundColor(ref Ray r)
