@@ -1,4 +1,5 @@
 ﻿using System.Collections;
+using System.Linq;
 using TMPro;
 using Unity.EditorCoroutines.Editor;
 using Unity.Mathematics;
@@ -50,6 +51,8 @@ namespace RayTracingWeekend
         void OnEnable()
         {
             m_Disposed = false;
+            m_ScaleOptionLabels = m_ScaleOptions.Select((i => i.ToString())).ToArray();
+            
             m_ChapterOne = new ChapterOne();
             m_ChapterTwo = new ChapterTwo();
             m_ChapterThree = new ChapterThree();
@@ -64,6 +67,10 @@ namespace RayTracingWeekend
         }
 
         bool m_Disposed;
+
+        int m_SelectedScaleOption = 4;
+        int[] m_ScaleOptions = {1, 2, 4, 6, 8, 10, 12};
+        string[] m_ScaleOptionLabels;
         
         void Dispose()
         {
@@ -82,10 +89,11 @@ namespace RayTracingWeekend
                 Dispose();
             }
             
-            
 
             m_ScrollPosition = EditorGUILayout.BeginScrollView(m_ScrollPosition);
-            
+
+            DrawGlobalOptions();
+
             DrawChapterBasic(m_ChapterOne, "1");
             DrawChapterBasic(m_ChapterTwo, "2");
             DrawChapterBasic(m_ChapterThree, "3");
@@ -107,6 +115,25 @@ namespace RayTracingWeekend
             DrawChapterTen();
             
             EditorGUILayout.EndScrollView();
+        }
+
+        string m_CanvasSizeLabel;
+        
+        void DrawGlobalOptions()
+        {
+            var maxWidth = GUILayout.MaxWidth(200);
+            EditorGUILayout.BeginHorizontal();
+            
+            var label = new GUIContent("Canvas Scale", "The number to multiply the book's 200x100 image dimensions by");
+            EditorGUILayout.LabelField(label, maxWidth);
+            m_SelectedScaleOption = EditorGUILayout.IntPopup(m_SelectedScaleOption, m_ScaleOptionLabels, 
+                m_ScaleOptions, maxWidth);
+
+            var size = Constants.ImageSize * m_SelectedScaleOption;
+            m_CanvasSizeLabel = $"Resolution: {size.x} x {size.y}";
+            EditorGUILayout.LabelField(m_CanvasSizeLabel);
+            
+            EditorGUILayout.EndHorizontal();
         }
 
         void DrawChapterFour()
