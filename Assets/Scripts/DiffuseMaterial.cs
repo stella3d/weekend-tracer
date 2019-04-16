@@ -39,8 +39,9 @@ namespace RayTracingWeekend
         }
         
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static bool Scatter(Material m, Ray r, HitRecord rec, Random rand, ref float3 attenuation, ref Ray scattered)
+        public static bool Scatter(Ray r, HitRecord rec, Random rand, ref float3 attenuation, ref Ray scattered)
         {
+            var m = rec.material;
             float3 reflected = Reflect(math.normalize(r.direction), rec.normal);
             scattered = new Ray(rec.p, reflected + m.fuzziness * Utils.RandomInUnitSphere(rand));
             attenuation = m.albedo;

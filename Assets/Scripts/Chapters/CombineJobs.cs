@@ -3,6 +3,7 @@ using Unity.Burst;
 using Unity.Collections;
 using Unity.Jobs;
 using Unity.Mathematics;
+using UnityEngine;
 using Random = Unity.Mathematics.Random;
 
 namespace RayTracingWeekend
@@ -103,7 +104,7 @@ namespace RayTracingWeekend
         }
     }
     
-    [BurstCompile]
+    //[BurstCompile]
     public struct CombineJobEight : IJobParallelFor
     {
         public int CompletedSampleCount;
@@ -118,15 +119,37 @@ namespace RayTracingWeekend
         [ReadOnly] public NativeArray<float3> In8;
         
         public NativeArray<float4> Accumulated;
-        
+
+        public CombineJobEight(NativeArray<float3>[] buffers, NativeArray<float4> accumulated, int completedSamples)
+        {
+            if(buffers.Length != 8)
+                Debug.LogWarning($"CombineJobEight constructor needs 8 buffer inputs, but got {buffers.Length}!");
+
+            In1 = buffers[0];
+            In2 = buffers[1];
+            In3 = buffers[2];
+            In4 = buffers[3];
+            In5 = buffers[4];
+            In6 = buffers[5];
+            In7 = buffers[6];
+            In8 = buffers[7];
+            Accumulated = accumulated;
+            CompletedSampleCount = completedSamples;
+        }
+
         public void Execute(int i)
         {
             var sum = In1[i] + In2[i] + In3[i] + In4[i] + In5[i] + In6[i] + In7[i] + In8[i];
             var sumPixel = new float4(sum.x, sum.y , sum.z, 1f);
+            var averagePixel = sumPixel / 8;
+            
+            averagePixel.w = 1f;
             
             var a = Accumulated[i];
             var aWeighted = a * CompletedSampleCount;
+            
             var acc = (sumPixel + aWeighted) / (8 + CompletedSampleCount);
+            acc.w = 1f;                    // hard-code full alpha
             Accumulated[i] = acc;
         }
     }

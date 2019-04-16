@@ -46,6 +46,7 @@ namespace RayTracingWeekend
         /// </summary>
         public CameraFrame(float3 lookFrom, float3 lookAt, float3 vup, float vfov, float aspect)
         {
+            lensRadius = 0.5f;
             float theta = (float)(vfov * math.PI / 180f);
             float halfHeight = math.tan(theta / 2);
             float halfWidth = aspect * halfHeight;
@@ -57,7 +58,6 @@ namespace RayTracingWeekend
             lowerLeftCorner = origin - halfWidth * u - halfHeight * v - w;
             horizontal = 2 * halfWidth * u;
             vertical = 2 * halfHeight * v;
-            lensRadius = 1f;
         }
         
         /// <summary>
@@ -89,5 +89,37 @@ namespace RayTracingWeekend
                 vertical = new float3(0, 2, 0),
                 origin = new float3()
             };
+        
+        public static CameraFrame ChapterTen
+        {
+            get
+            {
+                var lookFrom = new float3(-2f, 2f, 1f);
+                var lookAt = new float3(0f, 0f, -1f);
+                var up = new float3(0f, 1f, 0f);
+                float fov = 90f;
+                // this aspect ratio is hardcoded based on it being the one from the book
+                float aspectRatio = 200 / 100;
+                var frame = new CameraFrame(lookFrom, lookAt, up, fov, aspectRatio);
+                return frame;
+            }
+        }
+        
+        public static CameraFrame ChapterEleven
+        {
+            get
+            {
+                var lookFrom = new float3(3f, 3f, 2f);
+                var lookAt = new float3(0f, 0f, -1f);
+                var distToFocus = math.length(lookFrom - lookAt);
+                var aperture = 2f;
+                var up = new float3(0f, 1f, 0f);
+                float fov = 20f;
+                // this aspect ratio is hardcoded based on it being the one from the book
+                float aspectRatio = 200 / 100;
+                var frame = new CameraFrame(lookFrom, lookAt, up, fov, aspectRatio, aperture, distToFocus);
+                return frame;
+            }
+        }
     }
 }

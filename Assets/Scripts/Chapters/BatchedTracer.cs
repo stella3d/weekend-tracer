@@ -1,6 +1,8 @@
 ﻿using System;
+using System.Collections;
 using Unity.Burst;
 using Unity.Collections;
+using Unity.EditorCoroutines.Editor;
 using Unity.Jobs;
 using Unity.Mathematics;
 using UnityEngine;
@@ -25,12 +27,16 @@ namespace RayTracingWeekend
         
         public int canvasScale { get; set; }
         public float fieldOfView { get; set; }
+        public CameraFrame camera { get; set; }
 
         public const int BatchSampleCount = 16;
         public int CompletedSampleCount { get; private set; }
         
-        public BatchedTracer()
+        public BatchedTracer(HitableArray<Sphere> spheres, CameraFrame camera, int canvasScale = 4)
         {
+            this.canvasScale = canvasScale;
+            this.camera = camera;
+            m_Spheres = spheres;
             Setup();
         }
 
@@ -41,10 +47,7 @@ namespace RayTracingWeekend
 
         internal override void Setup()
         {
-            Dispose();
-            m_Spheres = ExampleSphereSets.FiveWithDielectric(Allocator.Persistent);
-            // TODO - fix the scaling setup
-            var i = canvasScale == 0 ? canvasScale = 6 : canvasScale = canvasScale;
+            //Dispose();
             ScaleTexture(canvasScale, TextureFormat.RGBAFloat);
             var length = texture.height * texture.width;
             m_BatchHandles = new NativeArray<JobHandle>(8, Allocator.Persistent);
@@ -107,8 +110,7 @@ namespace RayTracingWeekend
                                 }
                                 break;
                             case MaterialType.Metal:
-                                if (MetalMaterial.Scatter(rec.material,
-                                    r, rec, random, ref attenuation, ref scattered))
+                                if (MetalMaterial.Scatter(r, rec, random, ref attenuation, ref scattered))
                                 {
                                     return attenuation * Color(scattered, world, depth + 1);
                                 }
@@ -181,8 +183,7 @@ namespace RayTracingWeekend
                                 }
                                 break;
                             case MaterialType.Metal:
-                                if (MetalMaterial.Scatter(rec.material,
-                                    r, rec, random, ref attenuation, ref scattered))
+                                if (MetalMaterial.Scatter(r, rec, random, ref attenuation, ref scattered))
                                 {
                                     return attenuation * Color(scattered, world, depth + 1);
                                 }
@@ -206,10 +207,9 @@ namespace RayTracingWeekend
             }
         }
 
-        CameraFrame m_CameraFrame = CameraFrame.Default;
         HitableArray<Sphere> m_Spheres;
 
-        CameraFrame GetChapterTenCamera()
+        public CameraFrame GetChapterTenCamera()
         {
             var lookFrom = new float3(-2f, 2f, 1f);
             var lookAt = new float3(0f, 0f, -1f);
@@ -220,7 +220,7 @@ namespace RayTracingWeekend
             return frame;
         }
         
-        CameraFrame GetChapterElevenCamera()
+        public CameraFrame GetChapterElevenCamera()
         {
             var lookFrom = new float3(3f, 3f, 2f);
             var lookAt = new float3(0f, 0f, -1f);
@@ -236,15 +236,13 @@ namespace RayTracingWeekend
         
         public override void DrawToTexture()
         {
-            m_CameraFrame = GetChapterElevenCamera();
-
             for (int i = 0; i < m_JobCount; i++)
             {
                 var rand = new Random();
                 rand.InitState((uint)i + (uint)CompletedSampleCount + 100);
                 var job = new SerialJobWithFocus()
                 {
-                    camera = m_CameraFrame,
+                    camera = camera,
                     random = rand,
                     size = Constants.ImageSize * canvasScale,
                     World = m_Spheres,
@@ -254,19 +252,7 @@ namespace RayTracingWeekend
                 m_BatchHandles[i] = job.Schedule(m_Handle);
             }
 
-            var combineJob = new CombineJobEight()
-            {
-                CompletedSampleCount = CompletedSampleCount,
-                In1 = m_BatchBuffers[0],
-                In2 = m_BatchBuffers[1],
-                In3 = m_BatchBuffers[2],
-                In4 = m_BatchBuffers[3],
-                In5 = m_BatchBuffers[4],
-                In6 = m_BatchBuffers[5],
-                In7 = m_BatchBuffers[6],
-                In8 = m_BatchBuffers[7],
-                Accumulated = m_TextureBuffer
-            };
+            var combineJob = new CombineJobEight(m_BatchBuffers, m_TextureBuffer, CompletedSampleCount);
 
             var batchHandle = JobHandle.CombineDependencies(m_BatchHandles);
             
@@ -275,6 +261,75 @@ namespace RayTracingWeekend
 
             CompletedSampleCount += m_JobCount;
             texture.LoadAndApply(m_TextureBuffer, false);
+        }
+        
+        public void DrawToTextureWithoutFocus()
+        {
+            for (int i = 0; i < m_JobCount; i++)
+            {
+                var rand = new Random();
+                rand.InitState((uint)i + (uint)CompletedSampleCount + 100);
+                var job = new SerialJob()
+                {
+                    camera = camera,
+                    random = rand,
+                    size = Constants.ImageSize * canvasScale,
+                    World = m_Spheres,
+                    Pixels = m_BatchBuffers[i]
+                };
+
+                m_BatchHandles[i] = job.Schedule(m_Handle);
+            }
+
+            var combineJob = new CombineJobEight(m_BatchBuffers, m_TextureBuffer, CompletedSampleCount);
+
+            var batchHandle = JobHandle.CombineDependencies(m_BatchHandles);
+            
+            m_Handle = combineJob.Schedule(combineJob.In1.Length, 1024, batchHandle);
+            m_Handle.Complete();
+
+            CompletedSampleCount += m_JobCount;
+            texture.LoadAndApply(m_TextureBuffer, false);
+        }
+
+        float lastBatchTime;
+        public EditorCoroutine Routine { get; set; }
+        
+        // TODO - refactor this to not wait synchronously on the jobs
+        public IEnumerator BatchCoroutine(int count, Action onBatchComplete, float cycleTime = 0.64f)
+        {
+            // TODO - name the magic number
+            if (Time.time - lastBatchTime < cycleTime)
+                yield return null;
+
+            for (int i = 0; i < count / 8; i++)
+            {
+                DrawToTexture();
+                onBatchComplete();
+                lastBatchTime = Time.time;
+                yield return null;
+            }
+            
+            if(Routine != null)
+                EditorCoroutineUtility.StopCoroutine(Routine);
+        }
+        
+        public IEnumerator BatchCoroutineNoFocus(int count, Action onBatchComplete, float cycleTime = 0.64f)
+        {
+            // TODO - name the magic number
+            if (Time.time - lastBatchTime < cycleTime)
+                yield return null;
+
+            for (int i = 0; i < count / 8; i++)
+            {
+                DrawToTextureWithoutFocus();
+                onBatchComplete();
+                lastBatchTime = Time.time;
+                yield return null;
+            }
+            
+            if(Routine != null)
+                EditorCoroutineUtility.StopCoroutine(Routine);
         }
 
         public void Dispose()

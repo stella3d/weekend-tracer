@@ -76,8 +76,7 @@ namespace RayTracingWeekend
                                 }
                                 break;
                             case MaterialType.Metal:
-                                if (MetalMaterial.Scatter(rec.material,
-                                    r, rec, random, ref attenuation, ref scattered))
+                                if (MetalMaterial.Scatter(r, rec, random, ref attenuation, ref scattered))
                                 {
                                     return attenuation * Color(scattered, world, depth + 1);
                                 }

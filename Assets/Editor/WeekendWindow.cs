@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Linq;
 using TMPro;
 using Unity.EditorCoroutines.Editor;
@@ -63,13 +64,17 @@ namespace RayTracingWeekend
             m_ChapterSeven = new ChapterSeven();
             m_ChapterSevenAlt = new ChapterSevenAlternate();
             m_ChapterEightParallel = new ChapterEightParallel();
-            m_ChapterEleven = new BatchedTracer();
+            
+            m_ChapterEight = new BatchedTracer(ExampleSphereSets.ChapterEight(), CameraFrame.Default);
+            m_ChapterNine = new BatchedTracer(ExampleSphereSets.FiveWithDielectric(), CameraFrame.Default);
+            m_ChapterTen = new BatchedTracer(ExampleSphereSets.FiveWithDielectric(), CameraFrame.ChapterTen);
+            m_ChapterEleven = new BatchedTracer(ExampleSphereSets.FiveWithDielectric(), CameraFrame.ChapterEleven);
         }
 
         bool m_Disposed;
 
         int m_SelectedScaleOption = 4;
-        int[] m_ScaleOptions = {1, 2, 4, 6, 8, 10, 12};
+        readonly int[] m_ScaleOptions = {1, 2, 4, 6, 8, 10, 12};
         string[] m_ScaleOptionLabels;
         
         void Dispose()
@@ -107,8 +112,10 @@ namespace RayTracingWeekend
             DrawChapterSix();
             DrawChapterSeven();
             DrawChapterSevenAlt();
-            DrawChapterEight();
+            //DrawChapterEight();
             DrawChapterEightPro();
+
+            DrawChapterNine();
             
             EditorGUILayout.Space();
 
@@ -131,7 +138,7 @@ namespace RayTracingWeekend
 
             var size = Constants.ImageSize * m_SelectedScaleOption;
             m_CanvasSizeLabel = $"Resolution: {size.x} x {size.y}";
-            EditorGUILayout.LabelField(m_CanvasSizeLabel);
+            EditorGUILayout.LabelField(m_CanvasSizeLabel, GUILayout.MinWidth(180));
             
             EditorGUILayout.EndHorizontal();
         }
@@ -161,8 +168,9 @@ namespace RayTracingWeekend
         
         int m_SampleCountEight = 16;
         int m_SampleCountNine = 16;
+        int m_SampleCountTen = 16;
+        int m_SampleCountEleven = 16;
 
-        
         void DrawChapterSix()
         {
             m_SampleCountSix = EditorGUILayout.IntField("Sample Count", m_SampleCountSix);
@@ -230,12 +238,6 @@ namespace RayTracingWeekend
         
         void DrawChapterEightPro()
         {
-            if (m_ChapterEleven == null)
-            {
-                m_ChapterEleven = new BatchedTracer();
-                return;
-            }
-
             EditorGUILayout.Space();
             EditorGUILayout.Space();
             var completedStyle = new GUIStyle(EditorStyles.boldLabel);
@@ -246,35 +248,24 @@ namespace RayTracingWeekend
             
             var forceHeight = GUILayout.Height(36);
             
-            EditorGUILayout.BeginHorizontal();
-            EditorGUI.BeginDisabledGroup(true);
-            string label = "";
-            if ( m_ChapterEleven.texture != null)
-            {
-                var texture = m_ChapterEleven.texture;
-                label = $"Canvas Size:   {new Vector2Int(texture.width, texture.height)}";
-            }
-
-            EditorGUILayout.LabelField(label, completedStyle, forceHeight);
-            EditorGUI.EndDisabledGroup();
-            EditorGUILayout.EndHorizontal();
             EditorGUILayout.LabelField("Sample Count", EditorStyles.boldLabel); 
             EditorGUILayout.BeginHorizontal(forceHeight, GUILayout.ExpandHeight(true));
 
             m_SampleCountEight = EditorGUILayout.IntField("Total", m_SampleCountEight, totalStyle, forceHeight);
             
-            EditorGUILayout.LabelField("Completed: " + m_ChapterEleven.CompletedSampleCount, completedStyle,
+            EditorGUILayout.LabelField("Completed: " + m_ChapterEight.CompletedSampleCount, completedStyle,
                 forceHeight);
             EditorGUILayout.EndHorizontal();
             EditorGUILayout.Space();
 
-            if (GUILayout.Button($"Draw Progressive Image"))
+            if (GUILayout.Button($"Draw Chapter Eight Image"))
             {
                 lastTime = Time.time - 0.64f;
-                EditorCoroutineUtility.StartCoroutine(ChapterEightBatchRoutine(), this);
+                var routineEnumerator = m_ChapterEight.BatchCoroutineNoFocus(m_SampleCountEight, Repaint);
+                m_ChapterEight.Routine = EditorCoroutineUtility.StartCoroutine(routineEnumerator, this);
             }
             
-            DrawTexture(m_ChapterEleven.texture);
+            DrawTexture(m_ChapterEight.texture);
             EditorGUILayout.Separator();
             EditorGUILayout.Separator();
         }
@@ -282,11 +273,11 @@ namespace RayTracingWeekend
         float m_ChapterTenFov = 90;
         float m_PreviousTenFov = 90;
         
-        void DrawChapterTen()
+        void DrawChapterNine()
         {
-            if (EditorApplication.isCompiling && m_ChapterEleven.texture != null)
+            if (EditorApplication.isCompiling && m_ChapterTen.texture != null)
             {
-                m_ChapterEleven.Dispose();
+                m_ChapterNine.Dispose();
             }
 
             EditorGUILayout.Space();
@@ -297,19 +288,6 @@ namespace RayTracingWeekend
             totalStyle.fontSize = 18;
             totalStyle.fontStyle = FontStyle.Bold;
             var forceHeight = GUILayout.Height(36);
-            
-            EditorGUILayout.BeginHorizontal();
-            EditorGUI.BeginDisabledGroup(true);
-            string label = "";
-            if (m_ChapterEleven.texture != null)
-            {
-                var texture = m_ChapterEleven.texture;
-                label = $"Canvas Size:   {new Vector2Int(texture.width, texture.height)}";
-            }
-
-            EditorGUILayout.LabelField(label, completedStyle, forceHeight);
-            EditorGUI.EndDisabledGroup();
-            EditorGUILayout.EndHorizontal();
             
             /*
             m_ChapterTenFov = EditorGUILayout.Slider("Field of View", m_ChapterTenFov, 10f, 180f);
@@ -326,18 +304,67 @@ namespace RayTracingWeekend
 
             EditorGUILayout.LabelField("Sample Count", EditorStyles.boldLabel); 
             EditorGUILayout.BeginHorizontal(forceHeight, GUILayout.ExpandHeight(true));
-            m_SampleCountEight = EditorGUILayout.IntField("Total", m_SampleCountEight, totalStyle, forceHeight);
-            EditorGUILayout.LabelField("Completed: " + m_ChapterEleven.CompletedSampleCount, completedStyle, forceHeight);
+            m_SampleCountNine = EditorGUILayout.IntField("Total", m_SampleCountNine, totalStyle, forceHeight);
+            EditorGUILayout.LabelField("Completed: " + m_ChapterNine.CompletedSampleCount, completedStyle, forceHeight);
             EditorGUILayout.EndHorizontal();
             EditorGUILayout.Space();
 
-            if (GUILayout.Button($"Draw Image"))
+            if (GUILayout.Button($"Draw Chapter Nine Image"))
             {
                 lastTime = Time.time - 0.64f;
-                m_Routine = EditorCoroutineUtility.StartCoroutine(ChapterEightBatchRoutine(), this);
+                var routineEnumerator = m_ChapterNine.BatchCoroutineNoFocus(m_SampleCountNine, Repaint);
+                m_ChapterNine.Routine = EditorCoroutineUtility.StartCoroutine(routineEnumerator, this);
             }
             
-            DrawTexture(m_ChapterEleven.texture);
+            DrawTexture(m_ChapterNine.texture);
+            EditorGUILayout.Separator();
+            EditorGUILayout.Separator();
+        }
+        
+        void DrawChapterTen()
+        {
+            if (EditorApplication.isCompiling && m_ChapterTen.texture != null)
+            {
+                m_ChapterTen.Dispose();
+            }
+
+            EditorGUILayout.Space();
+            EditorGUILayout.Space();
+            var completedStyle = new GUIStyle(EditorStyles.boldLabel);
+            completedStyle.fontSize = 18;
+            var totalStyle = new GUIStyle(EditorStyles.numberField);
+            totalStyle.fontSize = 18;
+            totalStyle.fontStyle = FontStyle.Bold;
+            var forceHeight = GUILayout.Height(36);
+            
+            /*
+            m_ChapterTenFov = EditorGUILayout.Slider("Field of View", m_ChapterTenFov, 10f, 180f);
+            if (math.abs(m_ChapterTenFov - m_PreviousTenFov) > 1f || lastFovChangeTime > 1f)
+            {
+                Debug.Log("schedule");
+                m_PreviousTenFov = m_ChapterTenFov;
+                lastFovChangeTime = Time.time;
+                m_Pro.fieldOfView = m_ChapterTenFov;
+                lastTime = Time.time - 0.64f;
+                m_Routine = EditorCoroutineUtility.StartCoroutine(ProgressiveRoutine(8), this);
+            }
+            */
+
+            EditorGUILayout.LabelField("Sample Count", EditorStyles.boldLabel); 
+            EditorGUILayout.BeginHorizontal(forceHeight, GUILayout.ExpandHeight(true));
+            m_SampleCountTen = EditorGUILayout.IntField("Total", m_SampleCountTen, totalStyle, forceHeight);
+            EditorGUILayout.LabelField("Completed: " + m_ChapterTen.CompletedSampleCount, completedStyle, forceHeight);
+            EditorGUILayout.EndHorizontal();
+            EditorGUILayout.Space();
+
+            if (GUILayout.Button($"Draw Chapter Ten Image"))
+            {
+                lastTime = Time.time - 0.64f;
+                var routineEnumerator = m_ChapterTen.BatchCoroutineNoFocus(m_SampleCountTen, Repaint);
+                m_ChapterTen.Routine = EditorCoroutineUtility.StartCoroutine(routineEnumerator, this);
+            }
+            
+            DrawTexture(m_ChapterTen.texture);
             EditorGUILayout.Separator();
             EditorGUILayout.Separator();
         }
@@ -347,47 +374,6 @@ namespace RayTracingWeekend
         float lastTime;
         float lastFovChangeTime;
         
-        IEnumerator ChapterEightBatchRoutine(int count = 0)
-        {
-            // TODO - name the magic number
-            if (Time.time - lastTime < 0.64f)
-                yield return null;
-
-            if (count == 0)
-                count = m_SampleCountEight;
-            
-            for (int i = 0; i < count / 8; i++)
-            {
-                m_ChapterEleven.DrawToTexture();
-                Repaint();
-                lastTime = Time.time;
-                yield return null;
-            }
-            
-            EditorCoroutineUtility.StopCoroutine(m_Routine);
-        }
-        
-        IEnumerator ChapterNineBatchRoutine(int count = 0)
-        {
-            // TODO - name the magic number
-            if (Time.time - lastTime < 0.64f)
-                yield return null;
-
-            if (count == 0)
-                count = m_SampleCountNine;
-            
-            for (int i = 0; i < count / 8; i++)
-            {
-                m_ChapterEleven.DrawToTexture();
-                Repaint();
-                lastTime = Time.time;
-                yield return null;
-            }
-            
-            EditorCoroutineUtility.StopCoroutine(m_Routine);
-        }
-
-
         static void DrawChapterBasic<T>(Chapter<T> chapter, string chapterNumber) where T: struct
         {
             if (GUILayout.Button($"Draw Chapter {chapterNumber} Image"))
@@ -400,7 +386,7 @@ namespace RayTracingWeekend
         static void DrawTexture(Texture2D texture)
         {
             var size = Constants.ImageSize;
-            var rect = EditorGUILayout.GetControlRect(GUILayout.Width(size.x * s_CanvasScaling), GUILayout.Height(size.y * s_CanvasScaling));
+            var rect = EditorGUILayout.GetControlRect(GUILayout.Width(texture.width), GUILayout.Height(texture.height));
             EditorGUI.DrawPreviewTexture(rect, texture, null, ScaleMode.ScaleToFit);
         }
     }
