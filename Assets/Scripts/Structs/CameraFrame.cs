@@ -29,7 +29,7 @@ namespace RayTracingWeekend
 
         public CameraFrame(float vfov, float aspect)
         {
-            float theta = (float)(vfov * math.PI / 180d);
+            float theta = (float)(vfov * math.PI / 180f);
             float halfHeight = math.tan(theta / 2);
             float halfWidth = aspect * halfHeight;
             lowerLeftCorner = new float3(-halfWidth, -halfHeight, -1f);
@@ -40,13 +40,15 @@ namespace RayTracingWeekend
             u = v = w = new float3();
             lensRadius = 1f;
         }
+
         
+
         /// <summary>
         /// The camera constructor used in Chapter 10
         /// </summary>
         public CameraFrame(float3 lookFrom, float3 lookAt, float3 vup, float vfov, float aspect)
         {
-            lensRadius = 0.5f;
+            lensRadius = 1f;
             float theta = (float)(vfov * math.PI / 180f);
             float halfHeight = math.tan(theta / 2);
             float halfWidth = aspect * halfHeight;
@@ -87,7 +89,8 @@ namespace RayTracingWeekend
                 lowerLeftCorner = new float3(-2, -1, -1),
                 horizontal = new float3(4, 0, 0),
                 vertical = new float3(0, 2, 0),
-                origin = new float3()
+                origin = new float3(),
+                lensRadius = 1f
             };
         
         public static CameraFrame ChapterTen

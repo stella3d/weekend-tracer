@@ -51,7 +51,7 @@ namespace RayTracingWeekend
                     [2] = new Sphere(new float3(1f, 0f, -1f), 0.5f,
                         new Material(MaterialType.Metal, new float3(0.8f, 0.6f, 0.2f))),
                     [3] = new Sphere(new float3(-1f, 0f, -1f), 0.5f,
-                        new Material(MaterialType.Dielectric, new float3(), 0f, 1.5f)),
+                        new Material(MaterialType.Dielectric, float3.zero, 0f, 1.5f)),
                 }
             };
         }

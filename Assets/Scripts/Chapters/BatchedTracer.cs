@@ -116,8 +116,7 @@ namespace RayTracingWeekend
                                 }
                                 break;
                             case MaterialType.Dielectric:
-                                if (Utils.DielectricScatter(random, rec.material.refractionIndex,
-                                    r, rec, ref attenuation, ref scattered))
+                                if (Utils.DielectricScatter(random, r, rec, ref attenuation, ref scattered))
                                 {
                                     return attenuation * Color(scattered, world, depth + 1);
                                 }
@@ -156,9 +155,14 @@ namespace RayTracingWeekend
                         float u = (i + random.NextFloat()) / nx;
                         float v = (j + random.NextFloat()) / ny;
                         Ray r = camera.GetRay(u, v);
-                        Pixels[index] = Color(r, World, 0);
+                        Pixels[index] =  math.sqrt(Color(r, World, 0));
                     }
                 }
+            }
+
+            public float3 GammaColor(float3 linearColor)
+            {
+                return math.sqrt(linearColor);
             }
 
             public float3 Color(Ray r, HitableArray<Sphere> world, int depth)
@@ -189,8 +193,7 @@ namespace RayTracingWeekend
                                 }
                                 break;
                             case MaterialType.Dielectric:
-                                if (Utils.DielectricScatter(random, rec.material.refractionIndex,
-                                    r, rec, ref attenuation, ref scattered))
+                                if (Utils.DielectricScatter(random, r, rec, ref attenuation, ref scattered))
                                 {
                                     return attenuation * Color(scattered, world, depth + 1);
                                 }

@@ -44,14 +44,15 @@ namespace RayTracingWeekend
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static float Schlick(float cosine, float refractionIndex)
         {
-            float r0 = (1 - refractionIndex) / (1 + refractionIndex);
-            r0 *= r0;
-            return r0 + (1 - r0) * math.pow((1 - cosine), 5);
+            float r0 = (1f - refractionIndex) / (1f + refractionIndex);
+            r0 = r0 * r0;
+            return r0 + (1 - r0) * math.pow(1 - cosine, 5);
         }
         
-        public static bool DielectricScatter(Random rand, float refractionIndex, Ray rIn, HitRecord rec, 
+        public static bool DielectricScatter(Random rand, Ray rIn, HitRecord rec, 
             ref float3 attenuation, ref Ray scattered)
         {
+            var refractionIndex = rec.material.refractionIndex;
             float3 outwardNormal;
             float3 reflected = MetalMaterial.Reflect(rIn.direction, rec.normal);
             float niOverNt;
@@ -60,7 +61,7 @@ namespace RayTracingWeekend
             float reflectProbability;
             float cosine;
             
-            if (math.dot(rIn.direction, rec.normal) > 0)
+            if (math.dot(rIn.direction, rec.normal) > 0f)
             {
                 outwardNormal = -rec.normal;
                 niOverNt = refractionIndex;
@@ -73,10 +74,24 @@ namespace RayTracingWeekend
                 cosine = -math.dot(rIn.direction, rec.normal) / math.length(rIn.direction);
             }
 
-            reflectProbability = MetalMaterial.Refract(rIn.direction, outwardNormal, niOverNt, out refracted) 
-                                             ? Schlick(cosine, refractionIndex) : 1f;
+            if (MetalMaterial.Refract(rIn.direction, outwardNormal, niOverNt, out refracted))
+            {
+                reflectProbability = Schlick(cosine, refractionIndex);
+            }
+            else
+            {
+                reflectProbability = 1f;
+            }
 
-            scattered = rand.NextFloat() < reflectProbability ? new Ray(rec.p, reflected) : new Ray(rec.p, refracted);
+            if (rand.NextFloat() < reflectProbability)
+            {
+                scattered = new Ray(rec.p, reflected);
+            }
+            else
+            {
+                scattered = new Ray(rec.p, refracted);
+            }
+
             return true;
         }
 

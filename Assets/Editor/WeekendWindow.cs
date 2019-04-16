@@ -275,7 +275,7 @@ namespace RayTracingWeekend
         
         void DrawChapterNine()
         {
-            if (EditorApplication.isCompiling && m_ChapterTen.texture != null)
+            if (EditorApplication.isCompiling && m_ChapterNine.texture != null)
             {
                 m_ChapterNine.Dispose();
             }

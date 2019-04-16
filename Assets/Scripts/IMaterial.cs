@@ -3,9 +3,9 @@ using UnityEditor;
 
 namespace RayTracingWeekend
 {
-    public interface IMaterial
+    public interface IMaterialScatter
     {
-        bool Scatter(Ray r, HitRecord rec, ref float3 attenuation, ref Ray scattered);
+        bool Scatter(Ray r, HitRecord rec, Random rand, ref float3 attenuation, ref Ray scattered);
     }
 
     // TODO - find a way to make these not monolithic
@@ -16,7 +16,7 @@ namespace RayTracingWeekend
         public MaterialType type;
         public float3 albedo;
 
-        public Material(MaterialType type, float3 albedo, float fuzziness = 0f, float refractionIndex = 0f)
+        public Material(MaterialType type, float3 albedo, float fuzziness = 0f, float refractionIndex = 1f)
         {
             this.type = type;
             this.albedo = albedo;
