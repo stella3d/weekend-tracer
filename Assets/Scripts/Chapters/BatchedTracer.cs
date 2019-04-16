@@ -36,12 +36,13 @@ namespace RayTracingWeekend
 
         ~BatchedTracer()
         {
-            Dispose(true);
+            Dispose();
         }
 
         internal override void Setup()
         {
             Dispose();
+            m_Spheres = ExampleSphereSets.FiveWithDielectric(Allocator.Persistent);
             // TODO - fix the scaling setup
             var i = canvasScale == 0 ? canvasScale = 6 : canvasScale = canvasScale;
             ScaleTexture(canvasScale, TextureFormat.RGBAFloat);
@@ -206,6 +207,7 @@ namespace RayTracingWeekend
         }
 
         CameraFrame m_CameraFrame = CameraFrame.Default;
+        HitableArray<Sphere> m_Spheres;
 
         CameraFrame GetChapterTenCamera()
         {
@@ -231,9 +233,9 @@ namespace RayTracingWeekend
             return frame;
         }
 
+        
         public override void DrawToTexture()
         {
-            var spheres = ExampleSphereSets.FiveWithDielectric();
             m_CameraFrame = GetChapterElevenCamera();
 
             for (int i = 0; i < m_JobCount; i++)
@@ -245,7 +247,7 @@ namespace RayTracingWeekend
                     camera = m_CameraFrame,
                     random = rand,
                     size = Constants.ImageSize * canvasScale,
-                    World = spheres,
+                    World = m_Spheres,
                     Pixels = m_BatchBuffers[i]
                 };
 
@@ -273,29 +275,20 @@ namespace RayTracingWeekend
 
             CompletedSampleCount += m_JobCount;
             texture.LoadAndApply(m_TextureBuffer, false);
-            spheres.Dispose();
         }
 
-        void Dispose(bool disposing)
+        public void Dispose()
         {
+            m_Spheres.Dispose();
             foreach (var b in m_BatchBuffers)
             {
                 if(b.IsCreated)
                     b.Dispose();
             }
-            if (disposing)
-            {
-                if(m_TextureBuffer.IsCreated)
-                    m_TextureBuffer.Dispose();
-                if(m_BatchHandles.IsCreated)
-                    m_BatchHandles.Dispose();
-            }
-        }
-
-        public void Dispose()
-        {
-            Dispose(true);
-            GC.SuppressFinalize(this);
+            if(m_TextureBuffer.IsCreated)
+                m_TextureBuffer.Dispose();
+            if(m_BatchHandles.IsCreated)
+                m_BatchHandles.Dispose();
         }
     }
 }

@@ -19,7 +19,12 @@ namespace RayTracingWeekend
         ChapterSeven m_ChapterSeven;
         ChapterSevenAlternate m_ChapterSevenAlt;
         ChapterEightParallel m_ChapterEightParallel;
-        BatchedTracer m_Pro;
+        
+        BatchedTracer m_ChapterEight;
+        BatchedTracer m_ChapterNine;
+        BatchedTracer m_ChapterTen;
+        BatchedTracer m_ChapterEleven;
+        BatchedTracer m_ChapterTwelve;
 
         // default position and color same as the book
         float m_Chapter4ZPosition = -1f;
@@ -28,6 +33,7 @@ namespace RayTracingWeekend
         Vector2 m_ScrollPosition;
 
         static int s_CanvasScaling = 6;
+        int m_PreviousCanvasScaling;
 
         [MenuItem("Window/Weekend Tracer")]
         public static void ShowWindow()
@@ -36,8 +42,14 @@ namespace RayTracingWeekend
             window.Show();
         }
 
+        ~WeekendWindow()
+        {
+            Dispose();
+        }
+
         void OnEnable()
         {
+            m_Disposed = false;
             m_ChapterOne = new ChapterOne();
             m_ChapterTwo = new ChapterTwo();
             m_ChapterThree = new ChapterThree();
@@ -48,11 +60,30 @@ namespace RayTracingWeekend
             m_ChapterSeven = new ChapterSeven();
             m_ChapterSevenAlt = new ChapterSevenAlternate();
             m_ChapterEightParallel = new ChapterEightParallel();
-            m_Pro = new BatchedTracer();
+            m_ChapterEleven = new BatchedTracer();
+        }
+
+        bool m_Disposed;
+        
+        void Dispose()
+        {
+            Debug.Log("disposing all chapters....");
+            m_ChapterEleven.Dispose();
+            m_Disposed = true;
         }
 
         void OnGUI()
         {
+            if (m_Disposed)
+                return;
+            
+            if (EditorApplication.isCompiling)
+            {
+                Dispose();
+            }
+            
+            
+
             m_ScrollPosition = EditorGUILayout.BeginScrollView(m_ScrollPosition);
             
             DrawChapterBasic(m_ChapterOne, "1");
@@ -172,9 +203,9 @@ namespace RayTracingWeekend
         
         void DrawChapterEightPro()
         {
-            if (m_Pro == null)
+            if (m_ChapterEleven == null)
             {
-                m_Pro = new BatchedTracer();
+                m_ChapterEleven = new BatchedTracer();
                 return;
             }
 
@@ -191,9 +222,9 @@ namespace RayTracingWeekend
             EditorGUILayout.BeginHorizontal();
             EditorGUI.BeginDisabledGroup(true);
             string label = "";
-            if ( m_Pro.texture != null)
+            if ( m_ChapterEleven.texture != null)
             {
-                var texture = m_Pro.texture;
+                var texture = m_ChapterEleven.texture;
                 label = $"Canvas Size:   {new Vector2Int(texture.width, texture.height)}";
             }
 
@@ -205,7 +236,7 @@ namespace RayTracingWeekend
 
             m_SampleCountEight = EditorGUILayout.IntField("Total", m_SampleCountEight, totalStyle, forceHeight);
             
-            EditorGUILayout.LabelField("Completed: " + m_Pro.CompletedSampleCount, completedStyle,
+            EditorGUILayout.LabelField("Completed: " + m_ChapterEleven.CompletedSampleCount, completedStyle,
                 forceHeight);
             EditorGUILayout.EndHorizontal();
             EditorGUILayout.Space();
@@ -216,7 +247,7 @@ namespace RayTracingWeekend
                 EditorCoroutineUtility.StartCoroutine(ChapterEightBatchRoutine(), this);
             }
             
-            DrawTexture(m_Pro.texture);
+            DrawTexture(m_ChapterEleven.texture);
             EditorGUILayout.Separator();
             EditorGUILayout.Separator();
         }
@@ -226,15 +257,9 @@ namespace RayTracingWeekend
         
         void DrawChapterTen()
         {
-            if (EditorApplication.isCompiling && m_Pro.texture != null)
+            if (EditorApplication.isCompiling && m_ChapterEleven.texture != null)
             {
-                m_Pro.Dispose();
-            }
-
-            if (m_Pro == null)
-            {
-                m_Pro = new BatchedTracer();
-                return;
+                m_ChapterEleven.Dispose();
             }
 
             EditorGUILayout.Space();
@@ -249,9 +274,9 @@ namespace RayTracingWeekend
             EditorGUILayout.BeginHorizontal();
             EditorGUI.BeginDisabledGroup(true);
             string label = "";
-            if (m_Pro.texture != null)
+            if (m_ChapterEleven.texture != null)
             {
-                var texture = m_Pro.texture;
+                var texture = m_ChapterEleven.texture;
                 label = $"Canvas Size:   {new Vector2Int(texture.width, texture.height)}";
             }
 
@@ -275,7 +300,7 @@ namespace RayTracingWeekend
             EditorGUILayout.LabelField("Sample Count", EditorStyles.boldLabel); 
             EditorGUILayout.BeginHorizontal(forceHeight, GUILayout.ExpandHeight(true));
             m_SampleCountEight = EditorGUILayout.IntField("Total", m_SampleCountEight, totalStyle, forceHeight);
-            EditorGUILayout.LabelField("Completed: " + m_Pro.CompletedSampleCount, completedStyle, forceHeight);
+            EditorGUILayout.LabelField("Completed: " + m_ChapterEleven.CompletedSampleCount, completedStyle, forceHeight);
             EditorGUILayout.EndHorizontal();
             EditorGUILayout.Space();
 
@@ -285,7 +310,7 @@ namespace RayTracingWeekend
                 m_Routine = EditorCoroutineUtility.StartCoroutine(ChapterEightBatchRoutine(), this);
             }
             
-            DrawTexture(m_Pro.texture);
+            DrawTexture(m_ChapterEleven.texture);
             EditorGUILayout.Separator();
             EditorGUILayout.Separator();
         }
@@ -306,7 +331,7 @@ namespace RayTracingWeekend
             
             for (int i = 0; i < count / 8; i++)
             {
-                m_Pro.DrawToTexture();
+                m_ChapterEleven.DrawToTexture();
                 Repaint();
                 lastTime = Time.time;
                 yield return null;
@@ -326,7 +351,7 @@ namespace RayTracingWeekend
             
             for (int i = 0; i < count / 8; i++)
             {
-                m_Pro.DrawToTexture();
+                m_ChapterEleven.DrawToTexture();
                 Repaint();
                 lastTime = Time.time;
                 yield return null;

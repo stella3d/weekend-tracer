@@ -36,7 +36,8 @@ namespace RayTracingWeekend
 
         public void Dispose()
         {
-            Objects.Dispose();
+            if(Objects.IsCreated)
+                Objects.Dispose();
         }
     }
 }
