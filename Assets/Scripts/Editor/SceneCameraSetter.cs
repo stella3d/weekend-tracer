@@ -9,11 +9,22 @@ public class SceneCameraSetter : EditorWindow
     static Vector3 s_SceneCamPosition;
     static Vector3 s_PreviousSceneCamPosition;
 
+    UnityEngine.Object m_LookAtObject;
+    Transform m_LookAtTrans;
+    
     void OnGUI()
     {
         s_SceneCamPosition = EditorGUILayout.Vector3Field("scene camera position", s_SceneCamPosition);
         if (s_SceneCamPosition != s_PreviousSceneCamPosition)
+        {
             SetSceneCameraPosition(s_SceneCamPosition);
+            if (m_LookAtTrans != null)
+            {
+                SetSceneCameraLookAt(m_LookAtTrans.position);
+            }
+        }
+
+        m_LookAtTrans = (Transform) EditorGUILayout.ObjectField(m_LookAtTrans, typeof(Transform));
 
         s_PreviousSceneCamPosition = s_SceneCamPosition;
     }
@@ -30,6 +41,13 @@ public class SceneCameraSetter : EditorWindow
         var view = SceneView.lastActiveSceneView;
         view.pivot = position;
         view.Repaint();
-        Debug.Log("set scene cam to " + position);
+    }
+    
+    public static void SetSceneCameraLookAt(Vector3 lookAt)
+    {
+        var view = SceneView.lastActiveSceneView;
+        var cam = view.camera;
+        cam.transform.LookAt(lookAt);
+        view.Repaint();
     }
 }

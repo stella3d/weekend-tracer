@@ -38,7 +38,7 @@ RenderSettings:
   m_ReflectionIntensity: 1
   m_CustomReflection: {fileID: 0}
   m_Sun: {fileID: 0}
-  m_IndirectSpecularColor: {r: 0.44657898, g: 0.4964133, b: 0.5748178, a: 1}
+  m_IndirectSpecularColor: {r: 0.37311953, g: 0.38074014, b: 0.3587274, a: 1}
   m_UseRadianceAmbientProbe: 0
 --- !u!157 &3
 LightmapSettings:
@@ -123,6 +123,7 @@ GameObject:
   - component: {fileID: 647639111}
   - component: {fileID: 647639110}
   - component: {fileID: 647639109}
+  - component: {fileID: 647639112}
   m_Layer: 0
   m_Name: Big / Ground Sphere
   m_TagString: Untagged
@@ -189,6 +190,19 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 3
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &647639112
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 647639108}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d0486afb1a7c68044918e4def09bc236, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_MaterialType: 1
 --- !u!1 &987429571
 GameObject:
   m_ObjectHideFlags: 0
@@ -239,7 +253,7 @@ Camera:
     height: 1
   near clip plane: 0.3
   far clip plane: 1000
-  field of view: 60
+  field of view: 90
   orthographic: 0
   orthographic size: 5
   m_Depth: -1
@@ -265,7 +279,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 987429571}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 1, z: -10}
+  m_LocalPosition: {x: 0, y: 0, z: -2}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 0}
@@ -282,6 +296,7 @@ GameObject:
   - component: {fileID: 1138791351}
   - component: {fileID: 1138791350}
   - component: {fileID: 1138791349}
+  - component: {fileID: 1138791352}
   m_Layer: 0
   m_Name: Center Sphere
   m_TagString: Untagged
@@ -348,6 +363,19 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 2
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1138791352
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1138791348}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d0486afb1a7c68044918e4def09bc236, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_MaterialType: 1
 --- !u!1 &1486703873
 GameObject:
   m_ObjectHideFlags: 0
@@ -372,7 +400,7 @@ Light:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1486703873}
-  m_Enabled: 1
+  m_Enabled: 0
   serializedVersion: 8
   m_Type: 1
   m_Color: {r: 1, g: 0.95686275, b: 0.8392157, a: 1}
@@ -428,6 +456,7 @@ GameObject:
   - component: {fileID: 1799404567}
   - component: {fileID: 1799404566}
   - component: {fileID: 1799404565}
+  - component: {fileID: 1799404568}
   m_Layer: 0
   m_Name: RightSphere
   m_TagString: Untagged
@@ -494,6 +523,19 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 5
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1799404568
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1799404564}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d0486afb1a7c68044918e4def09bc236, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_MaterialType: 2
 --- !u!1 &1930715719
 GameObject:
   m_ObjectHideFlags: 0
@@ -505,6 +547,7 @@ GameObject:
   - component: {fileID: 1930715722}
   - component: {fileID: 1930715721}
   - component: {fileID: 1930715720}
+  - component: {fileID: 1930715723}
   m_Layer: 0
   m_Name: LeftSphere
   m_TagString: Untagged
@@ -571,3 +614,16 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 4
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1930715723
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1930715719}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d0486afb1a7c68044918e4def09bc236, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_MaterialType: 2
