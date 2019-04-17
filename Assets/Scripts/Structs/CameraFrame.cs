@@ -1,6 +1,8 @@
 using System.Runtime.CompilerServices;
 using Unity.Mathematics;
 using UnityEditor.MemoryProfiler;
+using UnityEngine;
+using Random = Unity.Mathematics.Random;
 
 namespace RayTracingWeekend
 {
@@ -41,7 +43,39 @@ namespace RayTracingWeekend
             lensRadius = 1f;
         }
 
-        
+        public CameraFrame(GameObject unityCamObject)
+        {
+            var unityCam = unityCamObject.GetComponent<Camera>();
+            var transform = unityCamObject.transform;
+
+            var transPos = transform.position;
+            var aspect = unityCam.aspect;
+            var vfov = unityCam.fieldOfView * (1 / aspect);
+            var vup = transform.up;
+
+            lensRadius = 1f;
+
+            var screenMid = new Vector3(unityCam.pixelWidth / 2f, unityCam.pixelHeight / 2f, 0f);
+            var lookRay = unityCam.ScreenPointToRay(screenMid);
+            float3 lookFrom = lookRay.origin;
+            lookFrom.z += transPos.z;
+            float3 lookAt = lookRay.direction;
+            
+            Debug.Log(lookRay);
+            Debug.LogFormat("look - from: {0} , at: {1}", lookFrom, lookAt);
+
+            float theta = (float)(vfov * math.PI / 180f);
+            float halfHeight = math.tan(theta / 2f);
+            float halfWidth = aspect * halfHeight;
+            origin = lookFrom;
+            w = math.normalize(lookFrom - lookAt);
+            u = math.normalize(math.cross(vup, w));
+            v = math.cross(w, u);
+            lowerLeftCorner = new float3(-halfWidth, -halfHeight, -1f);        
+            lowerLeftCorner = origin - halfWidth * u - halfHeight * v - w;
+            horizontal = 2 * halfWidth * u;
+            vertical = 2 * halfHeight * v;
+        }
 
         /// <summary>
         /// The camera constructor used in Chapter 10

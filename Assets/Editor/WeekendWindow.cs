@@ -289,18 +289,14 @@ namespace RayTracingWeekend
             totalStyle.fontStyle = FontStyle.Bold;
             var forceHeight = GUILayout.Height(36);
             
-            /*
-            m_ChapterTenFov = EditorGUILayout.Slider("Field of View", m_ChapterTenFov, 10f, 180f);
-            if (math.abs(m_ChapterTenFov - m_PreviousTenFov) > 1f || lastFovChangeTime > 1f)
+            
+            // UNITY CAM INTEGRATION
+            var mainCam = Camera.main;
+            if (mainCam != null)
             {
-                Debug.Log("schedule");
-                m_PreviousTenFov = m_ChapterTenFov;
-                lastFovChangeTime = Time.time;
-                m_Pro.fieldOfView = m_ChapterTenFov;
-                lastTime = Time.time - 0.64f;
-                m_Routine = EditorCoroutineUtility.StartCoroutine(ProgressiveRoutine(8), this);
+                //Debug.Log("assigning unity camera params!! " + mainCam.sensorSize);
+                m_ChapterNine.camera = new CameraFrame(mainCam.gameObject);
             }
-            */
 
             EditorGUILayout.LabelField("Sample Count", EditorStyles.boldLabel); 
             EditorGUILayout.BeginHorizontal(forceHeight, GUILayout.ExpandHeight(true));
@@ -337,18 +333,6 @@ namespace RayTracingWeekend
             totalStyle.fontStyle = FontStyle.Bold;
             var forceHeight = GUILayout.Height(36);
             
-            /*
-            m_ChapterTenFov = EditorGUILayout.Slider("Field of View", m_ChapterTenFov, 10f, 180f);
-            if (math.abs(m_ChapterTenFov - m_PreviousTenFov) > 1f || lastFovChangeTime > 1f)
-            {
-                Debug.Log("schedule");
-                m_PreviousTenFov = m_ChapterTenFov;
-                lastFovChangeTime = Time.time;
-                m_Pro.fieldOfView = m_ChapterTenFov;
-                lastTime = Time.time - 0.64f;
-                m_Routine = EditorCoroutineUtility.StartCoroutine(ProgressiveRoutine(8), this);
-            }
-            */
 
             EditorGUILayout.LabelField("Sample Count", EditorStyles.boldLabel); 
             EditorGUILayout.BeginHorizontal(forceHeight, GUILayout.ExpandHeight(true));
