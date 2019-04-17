@@ -23,5 +23,12 @@ namespace RayTracingWeekend
             if(dispose)
                 buffer.Dispose();
         }
+
+        public static float3 GetAlbedo(this UnityEngine.Material material)
+        {
+            // it's important to get the linear representation of the color
+            var c = material.color.linear;
+            return new float3(c.r, c.g, c.b);
+        }
     }
 }
