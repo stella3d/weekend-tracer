@@ -21,6 +21,8 @@ public class RaytracedSphere : MonoBehaviour
     Vector3 m_PreviousPosition;
     Color m_PreviousColor;
     
+    static readonly int Smoothness = Shader.PropertyToID("Smoothness");
+
     void Awake()
     {
         var meshRenderer = GetComponent<MeshRenderer>();
@@ -44,9 +46,14 @@ public class RaytracedSphere : MonoBehaviour
     public Sphere GetSphere()
     {
         var trans = transform;
+        var smoothness = m_UnityMaterial.GetFloat(Smoothness);
         return new Sphere
         {
-            material = { albedo = m_UnityMaterial.GetAlbedo() },
+            material =
+            {
+                albedo = m_UnityMaterial.GetAlbedo(),
+                fuzziness = (1f - smoothness)
+            },
             radius = trans.localScale.x / 2,
             center = trans.position
         };

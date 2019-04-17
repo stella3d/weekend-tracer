@@ -37,7 +37,7 @@ namespace RayTracingWeekend
         static int s_CanvasScaling = 6;
         int m_PreviousCanvasScaling;
 
-        [MenuItem("Window/Weekend Tracer")]
+        [MenuItem("Window/Weekend Tracer/Book")]
         public static void ShowWindow()
         {
             var window = GetWindow<WeekendWindow>();
