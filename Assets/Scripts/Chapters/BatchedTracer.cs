@@ -10,7 +10,6 @@ using Random = Unity.Mathematics.Random;
 
 namespace RayTracingWeekend
 {
-    // TODO - rename things so that this powers chapters from 8 to the end
     public class BatchedTracer : Chapter<float4>, IDisposable
     {
         public int numberOfSamples;
@@ -24,6 +23,10 @@ namespace RayTracingWeekend
         NativeArray<JobHandle> m_BatchHandles;
 
         public HitableArray<Sphere> Spheres;
+        
+#if DEBUG_RAYS
+        public NativeArray<Ray> InitialRays;
+#endif
 
         public JobHandle m_Handle;
         
@@ -73,6 +76,10 @@ namespace RayTracingWeekend
 
             [ReadOnly] public HitableArray<Sphere> World;
             [WriteOnly] public NativeArray<float3> Pixels;
+            
+#if DEBUG_RAYS
+            [WriteOnly] public NativeArray<Ray> InitialRays;
+#endif
 
             public void Execute()
             {
@@ -86,6 +93,9 @@ namespace RayTracingWeekend
                         float u = (i + random.NextFloat()) / nx;
                         float v = (j + random.NextFloat()) / ny;
                         Ray r = camera.GetRay(u, v, random);
+#if DEBUG_RAYS
+                        InitialRays[index] = r;
+#endif
                         Pixels[index] = Color(r, World, 0);
                     }
                 }
@@ -242,7 +252,10 @@ namespace RayTracingWeekend
                     random = rand,
                     size = Constants.ImageSize * canvasScale,
                     World = Spheres,
-                    Pixels = m_BatchBuffers[i]
+                    Pixels = m_BatchBuffers[i],
+#if DEBUG_RAYS
+                    InitialRays = InitialRays
+#endif
                 };
 
                 m_BatchHandles[i] = job.Schedule(m_Handle);
