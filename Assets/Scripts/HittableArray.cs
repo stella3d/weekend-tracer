@@ -1,13 +1,17 @@
 using System;
+using System.Collections;
+using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using Unity.Collections;
 
 namespace RayTracingWeekend
 {
-    public struct HitableArray<T> : IHittable, IDisposable
+    public struct HitableArray<T> : IHittable, IDisposable, IEnumerable<T>
         where T: struct, IHittable
     {
         public NativeArray<T> Objects;
+
+        public int Length => Objects.Length;
 
         public HitableArray(int count, Allocator allocator = Allocator.Persistent)
         {
@@ -32,6 +36,16 @@ namespace RayTracingWeekend
             }
 
             return hitAnything;
+        }
+        
+        public IEnumerator<T> GetEnumerator()
+        {
+            return Objects.GetEnumerator();
+        }
+
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return GetEnumerator();
         }
 
         public void Dispose()

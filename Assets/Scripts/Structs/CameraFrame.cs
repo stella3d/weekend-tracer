@@ -57,12 +57,110 @@ namespace RayTracingWeekend
 
             var screenMid = new Vector3(unityCam.pixelWidth / 2f, unityCam.pixelHeight / 2f, 0f);
             var lookRay = unityCam.ScreenPointToRay(screenMid);
-            float3 lookFrom = lookRay.origin;
-            lookFrom.z += transPos.z;
-            float3 lookAt = lookRay.direction;
             
-            Debug.Log(lookRay);
-            Debug.LogFormat("look - from: {0} , at: {1}", lookFrom, lookAt);
+            float3 lookFrom = lookRay.origin;
+            var planeDiff = new Vector3(0f, 0f, unityCam.nearClipPlane + 1f );
+            var lookDiff = transform.rotation * planeDiff;
+            lookFrom = (Vector3)lookFrom - lookDiff;
+            
+            float3 lookAt = transform.TransformPoint(lookRay.direction);
+            
+
+            float theta = (float)(vfov * math.PI / 180f);
+            float halfHeight = math.tan(theta / 2f);
+            float halfWidth = aspect * halfHeight;
+            origin = lookFrom;
+            w = math.normalize(lookFrom - lookAt);
+            u = math.normalize(math.cross(vup, w));
+            v = math.cross(w, u);
+            lowerLeftCorner = new float3(-halfWidth, -halfHeight, -1f);        
+            lowerLeftCorner = origin - halfWidth * u - halfHeight * v - w;
+            horizontal = 2 * halfWidth * u;
+            vertical = 2 * halfHeight * v;
+        }
+        
+        public CameraFrame(GameObject unityCamObject, Vector3 lookAtPoint)
+        {
+            var unityCam = unityCamObject.GetComponent<Camera>();
+            var transform = unityCamObject.transform;
+
+            var transPos = transform.position;
+            var aspect = unityCam.aspect;
+            //var vfov = unityCam.fieldOfView * (1 / aspect);
+            var vfov = unityCam.fieldOfView;
+            var vup = transform.up;
+
+            lensRadius = 1f;
+
+            var screenMid = new Vector3(unityCam.pixelWidth / 2f, unityCam.pixelHeight / 2f, 0f);
+            var lookRay = unityCam.ScreenPointToRay(screenMid);
+            
+            //float3 lookFrom = lookRay.origin;
+            float3 lookFrom = transPos;
+            var planeDiff = new Vector3(0f, 0f, unityCam.nearClipPlane);
+            var rotation = transform.rotation;
+            var lookDiff = rotation * planeDiff;
+            lookFrom = (Vector3) FlipZ(lookFrom + (float3)lookDiff);
+
+            float3 lookAt = lookAtPoint;
+
+            float theta = (float)(vfov * math.PI / 180f);
+            float halfHeight = math.tan(theta / 2f);
+            float halfWidth = aspect * halfHeight;
+            
+            origin = new float3(lookFrom.x, lookFrom.y, lookFrom.z);
+            
+            w = math.normalize(lookFrom - lookAt);
+            u = math.normalize(math.cross(vup, w));
+            v = math.cross(w, u);
+            lowerLeftCorner = new float3(-halfWidth, -halfHeight, -1f);        
+            lowerLeftCorner = origin - halfWidth * u - halfHeight * v - w;
+            horizontal = 2 * halfWidth * u;
+            vertical = 2 * halfHeight * v;
+        }
+
+        // flip unity's Z around the z of where the spheres are centered
+        static float3 FlipZ(float3 input, float originZ = -1f)
+        {
+            if (input.z < -1f)
+            {
+                input.z *= -1f;
+                input.z += originZ;
+            }
+            else
+            {
+                input.z *= -1f;
+                input.z += originZ;
+            }
+
+            return input;
+        }
+
+        public CameraFrame(GameObject unityCamObject, out float3 lookAt)
+        {
+            var unityCam = unityCamObject.GetComponent<Camera>();
+            var transform = unityCamObject.transform;
+
+            var transPos = transform.position;
+            var aspect = unityCam.aspect;
+            var vfov = unityCam.fieldOfView * (1 / aspect);
+            var vup = transform.up;
+
+            lensRadius = 1f;
+
+            var screenMid = new Vector3(unityCam.pixelWidth / 2f, unityCam.pixelHeight / 2f, 0f);
+            var lookRay = unityCam.ScreenPointToRay(screenMid);
+            
+            float3 lookFrom = lookRay.origin;
+            var planeDiff = new Vector3(0f, 0f, unityCam.nearClipPlane);
+            var lookDiff = transform.rotation * planeDiff;
+            lookFrom = (Vector3)lookFrom - lookDiff;
+
+            lookFrom.z *= -1f;
+            //lookFrom.z *= 2f;
+            //lookFrom.z -= 1f;
+            
+            lookAt = lookRay.direction;
 
             float theta = (float)(vfov * math.PI / 180f);
             float halfHeight = math.tan(theta / 2f);

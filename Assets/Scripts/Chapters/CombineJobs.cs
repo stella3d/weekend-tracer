@@ -104,7 +104,7 @@ namespace RayTracingWeekend
         }
     }
     
-    //[BurstCompile]
+    [BurstCompile]
     public struct CombineJobEight : IJobParallelFor
     {
         public int CompletedSampleCount;
@@ -150,6 +150,60 @@ namespace RayTracingWeekend
             
             var acc = (sumPixel + aWeighted) / (8 + CompletedSampleCount);
             acc.w = 1f;                    // hard-code full alpha
+            Accumulated[i] = acc;
+        }
+    }
+
+    [BurstCompile]
+    public struct CombineJobTen : IJobParallelFor
+    {
+        public int CompletedSampleCount;
+
+        [ReadOnly] public NativeArray<float3> In1;
+        [ReadOnly] public NativeArray<float3> In2;
+        [ReadOnly] public NativeArray<float3> In3;
+        [ReadOnly] public NativeArray<float3> In4;
+        [ReadOnly] public NativeArray<float3> In5;
+        [ReadOnly] public NativeArray<float3> In6;
+        [ReadOnly] public NativeArray<float3> In7;
+        [ReadOnly] public NativeArray<float3> In8;
+        [ReadOnly] public NativeArray<float3> In9;
+        [ReadOnly] public NativeArray<float3> In10;
+
+        public NativeArray<float4> Accumulated;
+
+        public CombineJobTen(NativeArray<float3>[] buffers, NativeArray<float4> accumulated, int completedSamples)
+        {
+            if (buffers.Length != 10)
+                Debug.LogWarning($"CombineJobTen constructor needs 10 buffer inputs, but got {buffers.Length}!");
+
+            In1 = buffers[0];
+            In2 = buffers[1];
+            In3 = buffers[2];
+            In4 = buffers[3];
+            In5 = buffers[4];
+            In6 = buffers[5];
+            In7 = buffers[6];
+            In8 = buffers[7];
+            In9 = buffers[8];
+            In10 = buffers[9];
+            Accumulated = accumulated;
+            CompletedSampleCount = completedSamples;
+        }
+
+        public void Execute(int i)
+        {
+            var sum = In1[i] + In2[i] + In3[i] + In4[i] + In5[i] + In6[i] + In7[i] + In8[i] + In9[i] + In10[i];
+            var sumPixel = new float4(sum.x, sum.y, sum.z, 1f);
+            var averagePixel = sumPixel / 10;
+
+            averagePixel.w = 1f;
+
+            var a = Accumulated[i];
+            var aWeighted = a * CompletedSampleCount;
+
+            var acc = (sumPixel + aWeighted) / (10 + CompletedSampleCount);
+            acc.w = 1f; // hard-code full alpha
             Accumulated[i] = acc;
         }
     }

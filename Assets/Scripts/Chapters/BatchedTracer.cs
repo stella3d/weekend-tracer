@@ -17,26 +17,27 @@ namespace RayTracingWeekend
 
         public NativeArray<float4> m_TextureBuffer;
 
-        public NativeArray<float3>[] m_BatchBuffers = new NativeArray<float3>[8];
+        public NativeArray<float3>[] m_BatchBuffers;
         
-        int m_JobCount = 8;
+        int m_JobCount = 10;
 
         NativeArray<JobHandle> m_BatchHandles;
-        
-        JobHandle m_Handle;
+
+        public HitableArray<Sphere> Spheres;
+
+        public JobHandle m_Handle;
         
         public int canvasScale { get; set; }
         public float fieldOfView { get; set; }
         public CameraFrame camera { get; set; }
 
-        public const int BatchSampleCount = 16;
         public int CompletedSampleCount { get; private set; }
         
         public BatchedTracer(HitableArray<Sphere> spheres, CameraFrame camera, int canvasScale = 4)
         {
             this.canvasScale = canvasScale;
             this.camera = camera;
-            m_Spheres = spheres;
+            Spheres = spheres;
             Setup();
         }
 
@@ -50,9 +51,11 @@ namespace RayTracingWeekend
             //Dispose();
             ScaleTexture(canvasScale, TextureFormat.RGBAFloat);
             var length = texture.height * texture.width;
-            m_BatchHandles = new NativeArray<JobHandle>(8, Allocator.Persistent);
+
+            m_BatchHandles = new NativeArray<JobHandle>(m_JobCount, Allocator.Persistent);
             m_TextureBuffer = new NativeArray<float4>(length, Allocator.Persistent);
 
+            m_BatchBuffers = new NativeArray<float3>[m_JobCount];
             for (int j = 0; j < m_BatchBuffers.Length; j++)
             {
                 m_BatchBuffers[j] = new NativeArray<float3>(length, Allocator.Persistent);
@@ -210,35 +213,25 @@ namespace RayTracingWeekend
             }
         }
 
-        HitableArray<Sphere> m_Spheres;
-
-        public CameraFrame GetChapterTenCamera()
+        struct ClearAccumulatedJob<T> : IJobParallelFor where T: struct
         {
-            var lookFrom = new float3(-2f, 2f, 1f);
-            var lookAt = new float3(0f, 0f, -1f);
-            var up = new float3(0f, 1f, 0f);
-            float fov = 90f;
-            float aspectRatio = texture.width / (float)texture.height;
-            var frame = new CameraFrame(lookFrom, lookAt, up, fov, aspectRatio);
-            return frame;
-        }
-        
-        public CameraFrame GetChapterElevenCamera()
-        {
-            var lookFrom = new float3(3f, 3f, 2f);
-            var lookAt = new float3(0f, 0f, -1f);
-            var distToFocus = math.length(lookFrom - lookAt);
-            var aperture = 2f;
-            var up = new float3(0f, 1f, 0f);
-            float fov = 20f;
-            float aspectRatio = texture.width / (float)texture.height;
-            var frame = new CameraFrame(lookFrom, lookAt, up, fov, aspectRatio, aperture, distToFocus);
-            return frame;
+            [WriteOnly] public NativeArray<T> Buffer;
+            
+            public void Execute(int index)
+            {
+                Buffer[index] = default;
+            }
         }
 
-        
         public override void DrawToTexture()
         {
+            if (clearOnDraw)
+            {
+                CompletedSampleCount = 0;
+                var clearJob = new ClearAccumulatedJob<float4> { Buffer = m_TextureBuffer };
+                m_Handle = clearJob.Schedule(m_TextureBuffer.Length, 4096, m_Handle);
+            }
+            
             for (int i = 0; i < m_JobCount; i++)
             {
                 var rand = new Random();
@@ -248,14 +241,14 @@ namespace RayTracingWeekend
                     camera = camera,
                     random = rand,
                     size = Constants.ImageSize * canvasScale,
-                    World = m_Spheres,
+                    World = Spheres,
                     Pixels = m_BatchBuffers[i]
                 };
 
                 m_BatchHandles[i] = job.Schedule(m_Handle);
             }
 
-            var combineJob = new CombineJobEight(m_BatchBuffers, m_TextureBuffer, CompletedSampleCount);
+            var combineJob = new CombineJobTen(m_BatchBuffers, m_TextureBuffer, CompletedSampleCount);
 
             var batchHandle = JobHandle.CombineDependencies(m_BatchHandles);
             
@@ -266,8 +259,18 @@ namespace RayTracingWeekend
             texture.LoadAndApply(m_TextureBuffer, false);
         }
         
+        public bool clearOnDraw { get; set; }
+        
+        
         public void DrawToTextureWithoutFocus()
         {
+            if (clearOnDraw)
+            {
+                CompletedSampleCount = 0;
+                var clearJob = new ClearAccumulatedJob<float4> { Buffer = m_TextureBuffer };
+                m_Handle = clearJob.Schedule(m_TextureBuffer.Length, 4096, m_Handle);
+            }
+
             for (int i = 0; i < m_JobCount; i++)
             {
                 var rand = new Random();
@@ -277,14 +280,14 @@ namespace RayTracingWeekend
                     camera = camera,
                     random = rand,
                     size = Constants.ImageSize * canvasScale,
-                    World = m_Spheres,
+                    World = Spheres,
                     Pixels = m_BatchBuffers[i]
                 };
 
                 m_BatchHandles[i] = job.Schedule(m_Handle);
             }
 
-            var combineJob = new CombineJobEight(m_BatchBuffers, m_TextureBuffer, CompletedSampleCount);
+            var combineJob = new CombineJobTen(m_BatchBuffers, m_TextureBuffer, CompletedSampleCount);
 
             var batchHandle = JobHandle.CombineDependencies(m_BatchHandles);
             
@@ -305,7 +308,7 @@ namespace RayTracingWeekend
             if (Time.time - lastBatchTime < cycleTime)
                 yield return null;
 
-            for (int i = 0; i < count / 8; i++)
+            for (int i = 0; i < count / m_JobCount; i++)
             {
                 DrawToTexture();
                 onBatchComplete();
@@ -323,7 +326,7 @@ namespace RayTracingWeekend
             if (Time.time - lastBatchTime < cycleTime)
                 yield return null;
 
-            for (int i = 0; i < count / 8; i++)
+            for (int i = 0; i < count / m_JobCount; i++)
             {
                 DrawToTextureWithoutFocus();
                 onBatchComplete();
@@ -337,7 +340,7 @@ namespace RayTracingWeekend
 
         public void Dispose()
         {
-            m_Spheres.Dispose();
+            Spheres.Dispose();
             foreach (var b in m_BatchBuffers)
             {
                 if(b.IsCreated)

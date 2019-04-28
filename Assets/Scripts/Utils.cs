@@ -1,4 +1,5 @@
 using System.Runtime.CompilerServices;
+using Unity.Collections;
 using Unity.Mathematics;
 using UnityEditor;
 
@@ -93,6 +94,19 @@ namespace RayTracingWeekend
             }
 
             return true;
+        }
+        
+        public static void ReallocateIfNeeded<T>(ref NativeArray<T> array, int newLength, Allocator allocator = Allocator.Persistent)
+            where T: struct
+        {
+            var oldLength = array.Length;
+            if (newLength == oldLength)
+                return;
+        
+            if(array.IsCreated)
+                array.Dispose();
+        
+            array = new NativeArray<T>(newLength, allocator);
         }
 
         public static void PositionNoise(Random rand, float magnitude, HitableArray<Sphere> list)
