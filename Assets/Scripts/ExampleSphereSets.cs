@@ -5,7 +5,7 @@ namespace RayTracingWeekend
 {
     public static class ExampleSphereSets
     {
-        public static HitableArray<Sphere> FourVaryingSize(Allocator allocator = Allocator.TempJob)
+        public static HitableArray<Sphere> FourVaryingSize(Allocator allocator = Allocator.Persistent)
         {
             return new HitableArray<Sphere>(5, allocator)
             {
@@ -20,7 +20,7 @@ namespace RayTracingWeekend
             };
         }
         
-        public static HitableArray<Sphere> FourVaryingSizeAndMaterial(Allocator allocator = Allocator.TempJob)
+        public static HitableArray<Sphere> ChapterEight(Allocator allocator = Allocator.Persistent)
         {
             return new HitableArray<Sphere>(4, allocator)
             {
@@ -38,7 +38,7 @@ namespace RayTracingWeekend
             };
         }
         
-        public static HitableArray<Sphere> FourWithDielectric(Allocator allocator = Allocator.TempJob)
+        public static HitableArray<Sphere> FourWithDielectric(Allocator allocator = Allocator.Persistent)
         {
             return new HitableArray<Sphere>(4, allocator)
             {
@@ -51,13 +51,13 @@ namespace RayTracingWeekend
                     [2] = new Sphere(new float3(1f, 0f, -1f), 0.5f,
                         new Material(MaterialType.Metal, new float3(0.8f, 0.6f, 0.2f))),
                     [3] = new Sphere(new float3(-1f, 0f, -1f), 0.5f,
-                        new Material(MaterialType.Dielectric, new float3(), 0f, 1.5f)),
+                        new Material(MaterialType.Dielectric, float3.zero, 0f, 1.5f)),
                 }
             };
         }
         
         // this is the set used at the end of chapter 9
-        public static HitableArray<Sphere> FiveWithDielectric(Allocator allocator = Allocator.TempJob)
+        public static HitableArray<Sphere> FiveWithDielectric(Allocator allocator = Allocator.Persistent)
         {
             return new HitableArray<Sphere>(5, allocator)
             {
@@ -68,7 +68,7 @@ namespace RayTracingWeekend
                     [1] = new Sphere(new float3(0f, -100.5f, -1f), 100f,
                         new Material(MaterialType.Lambertian, new float3(0.8f, 0.8f, 0f))),
                     [2] = new Sphere(new float3(1f, 0f, -1f), 0.5f,
-                        new Material(MaterialType.Metal, new float3(0.8f, 0.6f, 0.2f))),
+                        new Material(MaterialType.Metal, new float3(0.8f, 0.6f, 0.2f), 0.3f)),
                     [3] = new Sphere(new float3(-1f, 0f, -1f), 0.5f,
                         new Material(MaterialType.Dielectric, float3.zero, 0f, 1.5f)),
                     [4] = new Sphere(new float3(-1f, 0f, -1f), -0.45f,
@@ -78,7 +78,7 @@ namespace RayTracingWeekend
         }
         
         
-        public static HitableArray<Sphere> DozenVaryingSizeAndMaterial(Allocator allocator = Allocator.TempJob)
+        public static HitableArray<Sphere> DozenVaryingSizeAndMaterial(Allocator allocator = Allocator.Persistent)
         {
             var smallFuzz = 0.08f;
             return new HitableArray<Sphere>(14, allocator)
@@ -117,7 +117,7 @@ namespace RayTracingWeekend
             };
         }
         
-        public static HitableArray<Sphere> DozenVaryingSizeAndMaterialDielectric(Allocator allocator = Allocator.TempJob)
+        public static HitableArray<Sphere> DozenVaryingSizeAndMaterialDielectric(Allocator allocator = Allocator.Persistent)
         {
             var smallFuzz = 0.08f;
             return new HitableArray<Sphere>(14, allocator)

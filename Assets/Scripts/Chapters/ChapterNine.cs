@@ -8,7 +8,7 @@ using Random = Unity.Mathematics.Random;
 
 namespace RayTracingWeekend
 {
-    public class ChapterEight : Chapter<Color24>
+    public class ChapterNine : Chapter<Color24>
     {
         public int numberOfSamples;
 
