@@ -10,7 +10,9 @@ namespace RayTracingWeekend
         Texture2D m_TracerRenderTexture;
         RaytracingSceneManager m_SceneManager;
 
-        BatchedTracer m_RayTracer;
+        DebugTracerWithoutFocus m_RayTracer;
+
+        DebugRayVisualizer m_RayVisualizer = new DebugRayVisualizer();
 
         bool m_ClearOnDraw;
         
@@ -21,7 +23,7 @@ namespace RayTracingWeekend
             EnsureRaySceneManager();
             
             // TODO - make this constructor work on just texture size instead of scaling
-            m_RayTracer = new BatchedTracer(m_SceneManager.Spheres, CameraFrame.Default, 2);
+            m_RayTracer = new DebugTracerWithoutFocus(m_SceneManager.Spheres, CameraFrame.Default, 2);
             m_TracerRenderTexture = m_RayTracer.texture;
             m_SceneManager = FindObjectOfType<RaytracingSceneManager>();
             m_SceneManager.UpdateWorld();
@@ -51,6 +53,12 @@ namespace RayTracingWeekend
             {
                 m_SceneManager.UpdateWorld();
                 OnSceneChange();
+            }
+            
+            if (GUILayout.Button("draw debug rays"))
+            {
+                m_RayVisualizer.PixelIndex += 16;
+                m_RayVisualizer.DrawCurrent(Random.ColorHSV());
             }
 
             var tex = m_TracerRenderTexture;
@@ -86,7 +94,7 @@ namespace RayTracingWeekend
             {
                 DrawRepeaterCounter++;
             
-                m_RayTracer.DrawToTextureWithoutFocus();
+                m_RayTracer.DrawToTexture();
                 m_SceneManager.dependency = m_RayTracer.m_Handle;
                 Repaint();
             
@@ -99,7 +107,11 @@ namespace RayTracingWeekend
         
         void DrawAndRepaint()
         {
-            m_RayTracer.DrawToTextureWithoutFocus();
+            m_RayTracer.DrawToTexture();
+
+            m_RayVisualizer.RaySegments = m_RayTracer.m_RaySegments;
+            m_RayVisualizer.PixelRaySegmentCount = m_RayTracer.m_PerPixelRaySegmentCount;
+            
             Repaint();
         }
 
