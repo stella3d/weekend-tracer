@@ -5,6 +5,44 @@ using UnityEditor;
 
 namespace RayTracingWeekend
 {
+    public static class Scatter
+    {
+        public static bool Dielectric(Random rand, Ray rIn, HitRecord rec, 
+            ref float3 attenuation, ref Ray scattered)
+        {
+            var refractionIndex = rec.material.refractionIndex;
+            float3 outwardNormal;
+            float3 reflected = MetalMaterial.Reflect(rIn.direction, rec.normal);
+            float niOverNt;
+            attenuation = new float3(1f, 1f, 1f);
+            float3 refracted;
+            float reflectProbability;
+            float cosine;
+            
+            if (math.dot(rIn.direction, rec.normal) > 0f)
+            {
+                outwardNormal = -rec.normal;
+                niOverNt = refractionIndex;
+                cosine = refractionIndex * math.dot(rIn.direction, rec.normal) / math.length(rIn.direction);
+            }
+            else
+            {
+                outwardNormal = rec.normal;
+                niOverNt = 1f / refractionIndex;
+                cosine = -math.dot(rIn.direction, rec.normal) / math.length(rIn.direction);
+            }
+
+            reflectProbability = MetalMaterial.Refract(rIn.direction, outwardNormal, niOverNt, out refracted) 
+                ? Utils.Schlick(cosine, refractionIndex) : 1f;
+
+            scattered = rand.NextFloat() < reflectProbability 
+                ? new Ray(rec.p, reflected) : new Ray(rec.p, refracted);
+
+            return true;
+        }
+    }
+
+
     public static class Utils
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -53,7 +91,6 @@ namespace RayTracingWeekend
         public static bool DielectricScatter(Random rand, Ray rIn, HitRecord rec, 
             ref float3 attenuation, ref Ray scattered)
         {
-            //rand.NextFloat();
             var refractionIndex = rec.material.refractionIndex;
             float3 outwardNormal;
             float3 reflected = MetalMaterial.Reflect(rIn.direction, rec.normal);
