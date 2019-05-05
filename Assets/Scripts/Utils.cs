@@ -53,6 +53,7 @@ namespace RayTracingWeekend
         public static bool DielectricScatter(Random rand, Ray rIn, HitRecord rec, 
             ref float3 attenuation, ref Ray scattered)
         {
+            //rand.NextFloat();
             var refractionIndex = rec.material.refractionIndex;
             float3 outwardNormal;
             float3 reflected = MetalMaterial.Reflect(rIn.direction, rec.normal);
@@ -107,59 +108,6 @@ namespace RayTracingWeekend
                 array.Dispose();
         
             array = new NativeArray<T>(newLength, allocator);
-        }
-
-        public static void PositionNoise(Random rand, float magnitude, HitableArray<Sphere> list)
-        {
-            for (var i = 0; i < list.Objects.Length; i++)
-            {
-                var sphere = list.Objects[i];
-                var firstRandom = rand.NextFloat();
-                var secondRandom = rand.NextFloat();
-                if (firstRandom > 0.5f)
-                {
-                    if (secondRandom > 0.5f)
-                    {
-                        sphere.center += new float3(rand.NextFloat(), 0f, rand.NextFloat()) * magnitude;
-                    }
-                    else
-                    {
-                        sphere.center += new float3(rand.NextFloat(), 0f, -rand.NextFloat()) * magnitude;
-                    }
-                }
-                else
-                {
-                    if (secondRandom > 0.5f)
-                    {
-                        sphere.center += new float3(-rand.NextFloat(), 0f, rand.NextFloat()) * magnitude;
-                    }
-                    else
-                    {
-                        sphere.center += new float3(-rand.NextFloat(), 0f, -rand.NextFloat()) * magnitude;
-                    }
-                }
-                
-                list.Objects[i] = sphere;
-            }
-        }
-        
-        public static void SizeNoise(Random rand, float magnitude, HitableArray<Sphere> list)
-        {
-            for (var i = 0; i < list.Objects.Length; i++)
-            {
-                var sphere = list.Objects[i];
-                var firstRandom = rand.NextFloat();
-                if (firstRandom > 0.5f)
-                {
-                    sphere.radius += rand.NextFloat() * magnitude;
-                }
-                else
-                {
-                    sphere.radius += rand.NextFloat() * -magnitude;
-                }
-                
-                list.Objects[i] = sphere;
-            }
         }
     }
 }

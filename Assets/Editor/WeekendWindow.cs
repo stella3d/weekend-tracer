@@ -288,15 +288,8 @@ namespace RayTracingWeekend
             totalStyle.fontSize = 18;
             totalStyle.fontStyle = FontStyle.Bold;
             var forceHeight = GUILayout.Height(36);
-            
-            
-            // UNITY CAM INTEGRATION
-            var mainCam = Camera.main;
-            if (mainCam != null)
-            {
-                //Debug.Log("assigning unity camera params!! " + mainCam.sensorSize);
-                m_ChapterNine.camera = new CameraFrame(mainCam.gameObject);
-            }
+
+            m_ChapterNine.camera = CameraFrame.Default;
 
             EditorGUILayout.LabelField("Sample Count", EditorStyles.boldLabel); 
             EditorGUILayout.BeginHorizontal(forceHeight, GUILayout.ExpandHeight(true));

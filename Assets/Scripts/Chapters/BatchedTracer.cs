@@ -129,6 +129,9 @@ namespace RayTracingWeekend
                                 }
                                 break;
                             case MaterialType.Dielectric:
+                                // The dark outline bug was fixed by adding this line that changes the state of the RNG.
+                                // DON'T REMOVE
+                                random.NextFloat();
                                 if (Utils.DielectricScatter(random, r, rec, ref attenuation, ref scattered))
                                 {
                                     return attenuation * Color(scattered, world, depth + 1);
@@ -206,6 +209,9 @@ namespace RayTracingWeekend
                                 }
                                 break;
                             case MaterialType.Dielectric:
+                                // The dark outline bug was fixed by adding this line that changes the state of the RNG.
+                                // DON'T REMOVE
+                                random.NextFloat();
                                 if (Utils.DielectricScatter(random, r, rec, ref attenuation, ref scattered))
                                 {
                                     return attenuation * Color(scattered, world, depth + 1);
