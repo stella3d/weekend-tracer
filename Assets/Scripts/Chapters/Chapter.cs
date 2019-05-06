@@ -8,8 +8,6 @@ namespace RayTracingWeekend
         public Texture2D texture = new Texture2D(Constants.DefaultImageSize.x, Constants.DefaultImageSize.y, 
                                                  TextureFormat.RGB24, false);
 
-        protected int canvasScaling = 8;
-        
         protected NativeArray<TPixel> GetBuffer(Allocator allocator = Allocator.TempJob, int multiplier = 1)
         {
             var x = multiplier * Constants.DefaultImageSize.x;

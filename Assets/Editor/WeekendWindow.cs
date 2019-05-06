@@ -25,11 +25,23 @@ namespace RayTracingWeekend
         // default position and color same as the book
         float m_Chapter4ZPosition = -1f;
         Color32 m_Chapter4Color = Color.red;
-
+        
+        bool m_Disposed;
         Vector2 m_ScrollPosition;
 
-        static int s_CanvasScaling = 6;
+        // all state for user options goes under here
         int m_PreviousCanvasScaling;
+        int m_SelectedScaleOption = 4;
+        readonly int[] m_ScaleOptions = { 1, 2, 4, 6, 8, 10};
+        string[] m_ScaleOptionLabels;
+        string m_CanvasSizeLabel;
+        
+        // TODO - make it so these options can only be set to proper multiples
+        int m_SamplesPerPixel = 64;
+        int m_SingleSampleJobsPerBatch = 4;
+        
+        float m_AbsorbRateSeven = 0.5f;
+        float m_PreviousAbsorbRateSeven = 0.5f;
 
         [MenuItem("Window/Weekend Tracer/Book")]
         public static void ShowWindow()
@@ -62,14 +74,9 @@ namespace RayTracingWeekend
             m_ChapterEleven = new BatchedTracer(ExampleSphereSets.FiveWithDielectric(), CameraFrame.ChapterEleven);
         }
 
-        bool m_Disposed;
-
-        int m_SelectedScaleOption = 4;
-        readonly int[] m_ScaleOptions = {1, 2, 4, 6, 8, 10, 12};
-        string[] m_ScaleOptionLabels;
-        
         void Dispose()
         {
+            // TODO make the disposing work properly
             Debug.Log("disposing all chapters....");
             m_ChapterEleven.Dispose();
             m_Disposed = true;
@@ -111,14 +118,16 @@ namespace RayTracingWeekend
             EditorGUILayout.EndScrollView();
         }
 
-        string m_CanvasSizeLabel;
         
         void DrawGlobalOptions()
         {
             var maxWidth = GUILayout.MaxWidth(200);
+            
+            m_SamplesPerPixel = EditorGUILayout.IntField("Samples Per Pixel", m_SamplesPerPixel);
+            
             EditorGUILayout.BeginHorizontal();
             
-            var label = new GUIContent("Canvas Scale", "The number to multiply the book's 200x100 image dimensions by");
+            var label = new GUIContent("Canvas Scale", "The number to multiply the book's default 200x100 canvas by");
             EditorGUILayout.LabelField(label, maxWidth);
             m_SelectedScaleOption = EditorGUILayout.IntPopup(m_SelectedScaleOption, m_ScaleOptionLabels, 
                 m_ScaleOptions, maxWidth);
@@ -147,29 +156,17 @@ namespace RayTracingWeekend
             EditorGUILayout.Separator();
         }
 
-        // TODO - cleanup all this.  Make every chapter use the same sample count option
-        int m_SampleCountSix = 16;
-        int m_SampleCountSeven = 16;
 
-        float m_AbsorbRateSeven = 0.5f;
-        float m_PreviousAbsorbRateSeven = 0.5f;
-        
-        int m_SampleCountEight = 16;
-        int m_SampleCountNine = 16;
-        int m_SampleCountTen = 16;
-        int m_SampleCountEleven = 16;
 
         void DrawChapterSix()
         {
-            m_SampleCountSix = EditorGUILayout.IntField("Sample Count", m_SampleCountSix);
-            m_ChapterSix.numberOfSamples = m_SampleCountSix;
+            m_ChapterSix.numberOfSamples = m_SamplesPerPixel;
             DrawChapterBasic(m_ChapterSix, "6");
         }
         
         void DrawChapterSeven()
         {
-            m_SampleCountSeven = EditorGUILayout.IntField("Sample Count", m_SampleCountSeven);
-            m_ChapterSeven.numberOfSamples = m_SampleCountSeven;
+            m_ChapterSeven.numberOfSamples = m_SamplesPerPixel;
 
             m_AbsorbRateSeven = EditorGUILayout.Slider("Absorb Rate", m_AbsorbRateSeven, 0.05f, 0.95f);
             m_ChapterSeven.absorbRate = m_AbsorbRateSeven;
@@ -198,7 +195,6 @@ namespace RayTracingWeekend
             EditorGUILayout.LabelField("Sample Count", EditorStyles.boldLabel); 
             EditorGUILayout.BeginHorizontal(forceHeight, GUILayout.ExpandHeight(true));
 
-            m_SampleCountEight = EditorGUILayout.IntField("Total", m_SampleCountEight, totalStyle, forceHeight);
             
             EditorGUILayout.LabelField("Completed: " + m_ChapterEight.CompletedSampleCount, completedStyle,
                 forceHeight);
@@ -207,7 +203,8 @@ namespace RayTracingWeekend
 
             if (GUILayout.Button($"Draw Chapter Eight Image"))
             {
-                var routineEnumerator = m_ChapterEight.BatchCoroutineNoFocus(m_SampleCountEight, Repaint);
+                // TODO - better explanation for the batch coroutine
+                var routineEnumerator = m_ChapterEight.BatchCoroutineNoFocus(m_SamplesPerPixel, Repaint);
                 m_ChapterEight.Routine = EditorCoroutineUtility.StartCoroutine(routineEnumerator, this);
             }
             
@@ -225,6 +222,7 @@ namespace RayTracingWeekend
 
             EditorGUILayout.Space();
             EditorGUILayout.Space();
+            // TODO - put the styles in a central place
             var completedStyle = new GUIStyle(EditorStyles.boldLabel);
             completedStyle.fontSize = 18;
             var totalStyle = new GUIStyle(EditorStyles.numberField);
@@ -236,14 +234,13 @@ namespace RayTracingWeekend
 
             EditorGUILayout.LabelField("Sample Count", EditorStyles.boldLabel); 
             EditorGUILayout.BeginHorizontal(forceHeight, GUILayout.ExpandHeight(true));
-            m_SampleCountNine = EditorGUILayout.IntField("Total", m_SampleCountNine, totalStyle, forceHeight);
             EditorGUILayout.LabelField("Completed: " + m_ChapterNine.CompletedSampleCount, completedStyle, forceHeight);
             EditorGUILayout.EndHorizontal();
             EditorGUILayout.Space();
 
             if (GUILayout.Button($"Draw Chapter Nine Image"))
             {
-                var routineEnumerator = m_ChapterNine.BatchCoroutineNoFocus(m_SampleCountNine, Repaint);
+                var routineEnumerator = m_ChapterNine.BatchCoroutineNoFocus(m_SamplesPerPixel, Repaint);
                 m_ChapterNine.Routine = EditorCoroutineUtility.StartCoroutine(routineEnumerator, this);
             }
             
@@ -270,14 +267,13 @@ namespace RayTracingWeekend
 
             EditorGUILayout.LabelField("Sample Count", EditorStyles.boldLabel); 
             EditorGUILayout.BeginHorizontal(forceHeight, GUILayout.ExpandHeight(true));
-            m_SampleCountTen = EditorGUILayout.IntField("Total", m_SampleCountTen, totalStyle, forceHeight);
             EditorGUILayout.LabelField("Completed: " + m_ChapterTen.CompletedSampleCount, completedStyle, forceHeight);
             EditorGUILayout.EndHorizontal();
             EditorGUILayout.Space();
 
             if (GUILayout.Button($"Draw Chapter Ten Image"))
             {
-                var routineEnumerator = m_ChapterTen.BatchCoroutineNoFocus(m_SampleCountTen, Repaint);
+                var routineEnumerator = m_ChapterTen.BatchCoroutineNoFocus(m_SamplesPerPixel, Repaint);
                 m_ChapterTen.Routine = EditorCoroutineUtility.StartCoroutine(routineEnumerator, this);
             }
             

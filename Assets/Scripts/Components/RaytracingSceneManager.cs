@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using Unity.Jobs;
-using Unity.Mathematics;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
@@ -71,12 +70,6 @@ namespace RayTracingWeekend
             
             dependency.Complete();
             Spheres = world;
-
-            float3 lookAt;
-            //Camera = new CameraFrame(UnityEngine.Camera.main.gameObject, out lookAt);
-            //lookAt.x = -lookAt.x;
-            //lookAt.x = -lookAt.x;
-            //m_MainCamera.transform.LookAt(lookAt);
         }
     }
 }

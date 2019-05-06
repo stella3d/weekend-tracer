@@ -2,7 +2,6 @@ using Unity.Mathematics;
 
 namespace RayTracingWeekend
 {
-    // TODO - find a way to make these not monolithic
     public struct Material
     {
         public float fuzziness;

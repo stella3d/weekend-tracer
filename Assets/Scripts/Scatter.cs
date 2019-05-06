@@ -18,7 +18,7 @@ namespace RayTracingWeekend
         public static bool Metal(Ray r, HitRecord rec, ref float3 attenuation, ref Ray scattered, ref Random random)
         {
             var m = rec.material;
-            float3 reflected = MetalMaterial.Reflect(math.normalize(r.direction), rec.normal);
+            float3 reflected = RayMath.Reflect(math.normalize(r.direction), rec.normal);
             scattered = new Ray(rec.p, reflected + m.fuzziness * Utils.RandomInUnitSphere(random));
             attenuation = m.albedo;
             return math.dot(scattered.direction, rec.normal) > 0;
@@ -29,7 +29,7 @@ namespace RayTracingWeekend
         {
             var refractionIndex = rec.material.refractionIndex;
             float3 outwardNormal;
-            float3 reflected = MetalMaterial.Reflect(r.direction, rec.normal);
+            float3 reflected = RayMath.Reflect(r.direction, rec.normal);
             float niOverNt;
             attenuation = new float3(1f, 1f, 1f);
             float3 refracted;
@@ -49,8 +49,8 @@ namespace RayTracingWeekend
                 cosine = -math.dot(r.direction, rec.normal) / math.length(r.direction);
             }
 
-            reflectProbability = MetalMaterial.Refract(r.direction, outwardNormal, niOverNt, out refracted) 
-                ? Utils.Schlick(cosine, refractionIndex) : 1f;
+            reflectProbability = RayMath.Refract(r.direction, outwardNormal, niOverNt, out refracted) 
+                ? RayMath.Schlick(cosine, refractionIndex) : 1f;
 
             scattered = rand.NextFloat() < reflectProbability 
                 ? new Ray(rec.p, reflected) : new Ray(rec.p, refracted);

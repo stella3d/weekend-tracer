@@ -7,12 +7,6 @@ public class RaytracedSphere : MonoBehaviour
 {
     public Sphere sphere { get; private set; }
 
-    public MaterialType materialType
-    {
-        get => m_MaterialType;
-        set => m_MaterialType = value;
-    }
-
     [SerializeField] MaterialType m_MaterialType = MaterialType.Lambertian;
 
     Material m_UnityMaterial;
@@ -55,9 +49,6 @@ public class RaytracedSphere : MonoBehaviour
     {
         var trans = transform;
         var pos = trans.position;
-        // for some reason flipping the x here makes them appear in the right place.  idk
-        //pos.x = -pos.x;
-        //pos.z = -pos.z;
         var smoothness = m_UnityMaterial.GetFloat(Smoothness);
         return new Sphere
         {

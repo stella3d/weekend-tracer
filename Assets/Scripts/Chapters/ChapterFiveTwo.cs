@@ -8,7 +8,7 @@ namespace RayTracingWeekend
     public class ChapterFiveTwo : Chapter<Color24>
     {
         [BurstCompile]
-        public struct Job : IJob
+        public struct SecondImageJob : IJob
         {
             public int2 size;
             
@@ -65,7 +65,7 @@ namespace RayTracingWeekend
                 }
             };
 
-            var job = new Job()
+            var job = new SecondImageJob()
             {
                 size = Constants.DefaultImageSize,
                 World = spheres,
