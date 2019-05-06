@@ -90,5 +90,10 @@ namespace RayTracingWeekend
             texture.LoadAndApply(job.Pixels);
             spheres.Dispose();
         }
+
+        public override JobHandle Schedule()
+        {
+            throw new System.NotImplementedException();
+        }
     }
 }

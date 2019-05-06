@@ -7,6 +7,19 @@ namespace RayTracingWeekend
 {
     public class ChaptersOneAndTwo : Chapter<Color24>
     {
+        /*
+        public override void Setup()
+        {
+            var length = texture.width * texture.height;
+            m_Pixels = new NativeArray<Color24>(length, Allocator.Persistent);
+        }
+
+        public override void Dispose()
+        {
+            m_Pixels.DisposeIfCreated();
+        }
+        */
+
         [BurstCompile]
         public struct Job : IJob
         {
@@ -32,8 +45,10 @@ namespace RayTracingWeekend
             }
         }
 
+        // TODO - factor all of these into a common method
         public override void DrawToTexture()
         {
+            /*
             var job = new Job()
             {
                 size = Constants.DefaultImageSize,
@@ -41,7 +56,21 @@ namespace RayTracingWeekend
             };
 
             job.Run();
-            texture.LoadAndApply(job.Pixels);
+            */
+            
+            jobHandle.Complete();
+            texture.LoadAndApply(pixelBuffer);
+        }
+
+        public override JobHandle Schedule()
+        {
+            var job = new Job()
+            {
+                size = Constants.DefaultImageSize,
+                Pixels = pixelBuffer
+            };
+
+            return job.Schedule();
         }
     }
 }

@@ -56,5 +56,10 @@ namespace RayTracingWeekend
             job.Run();
             texture.LoadAndApply(job.Pixels);
         }
+
+        public override JobHandle Schedule()
+        {
+            throw new System.NotImplementedException();
+        }
     }
 }

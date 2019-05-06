@@ -14,6 +14,9 @@ namespace RayTracingWeekend
 
         bool m_ClearOnDraw = true;
         
+        int DrawRepeater = 0;
+        int DrawRepeaterCounter;
+        
         void OnEnable()
         {
             minSize = new Vector2(200, 100);
@@ -57,9 +60,6 @@ namespace RayTracingWeekend
             var rect = GUILayoutUtility.GetRect(tex.width, tex.height);
             EditorGUI.DrawPreviewTexture(rect, m_TracerRenderTexture, null, ScaleMode.ScaleToFit);
         }
-
-        int DrawRepeater = 0;
-        int DrawRepeaterCounter;
 
         void OnSceneChange()
         {

@@ -69,6 +69,11 @@ namespace RayTracingWeekend
             }
         }
 
+        public override void Dispose()
+        {
+            throw new System.NotImplementedException();
+        }
+
         public override void DrawToTexture()
         {
             var job = new Job()
@@ -80,6 +85,11 @@ namespace RayTracingWeekend
             
             job.Run();
             texture.LoadAndApply(job.Pixels);
+        }
+
+        public override JobHandle Schedule()
+        {
+            throw new System.NotImplementedException();
         }
     }
 }

@@ -22,13 +22,13 @@ namespace RayTracingWeekend
             return new Color24(r, g, b);
         }
         
-        public static void LoadAndApply<T>(this Texture2D texture, NativeArray<T> buffer, bool dispose = true)
+        public static void LoadAndApply<T>(this Texture2D texture, NativeArray<T> buffer, bool dispose = false)
             where T : struct
         {
             texture.LoadRawTextureData(buffer);
             texture.Apply();
             if(dispose)
-                buffer.Dispose();
+                buffer.DisposeIfCreated();
         }
 
         public static float3 GetAlbedo(this UnityEngine.Material material)
@@ -36,6 +36,13 @@ namespace RayTracingWeekend
             // it's important to get the linear representation of the color
             var c = material.color.linear;
             return new float3(c.r, c.g, c.b);
+        }
+
+        public static void DisposeIfCreated<T>(this NativeArray<T> array)
+            where T: struct
+        {
+            if(array.IsCreated)
+                array.Dispose();
         }
     }
 }

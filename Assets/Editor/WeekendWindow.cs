@@ -287,10 +287,17 @@ namespace RayTracingWeekend
         static void DrawChapterBasic<T>(Chapter<T> chapter, string chapterNumber) where T: struct
         {
             if (GUILayout.Button($"Draw Chapter {chapterNumber} Image"))
-                chapter.DrawToTexture();
+                CompleteAndDraw(chapter);
 
             DrawTexture(chapter.texture);
             EditorGUILayout.Separator();
+        }
+
+        // schedule a job, immediately complete it and update the texture
+        static void CompleteAndDraw<T>(Chapter<T> chapter) where T: struct
+        {
+            chapter.Schedule().Complete();
+            chapter.DrawToTexture();
         }
 
         static void DrawTexture(Texture2D texture)

@@ -1,12 +1,19 @@
+using System;
 using Unity.Collections;
+using Unity.Jobs;
 using UnityEngine;
 
 namespace RayTracingWeekend
 {
-    public abstract class Chapter<TPixel> where TPixel: struct
+    public abstract class Chapter<TPixel> : IDisposable
+        where TPixel: struct
     {
         public Texture2D texture = new Texture2D(Constants.DefaultImageSize.x, Constants.DefaultImageSize.y, 
                                                  TextureFormat.RGB24, false);
+
+        public JobHandle jobHandle { get; private set; }
+        
+        public NativeArray<TPixel> pixelBuffer { get; private set; }
 
         protected NativeArray<TPixel> GetBuffer(Allocator allocator = Allocator.TempJob, int multiplier = 1)
         {
@@ -20,9 +27,16 @@ namespace RayTracingWeekend
             Setup();
         }
 
-        internal virtual void Setup() { }
+        public virtual void Setup()
+        {
+            pixelBuffer = texture.GetRawTextureData<TPixel>();
+        }
+
+        public virtual void Dispose() {}
 
         public abstract void DrawToTexture();
+
+        public abstract JobHandle Schedule();
 
         internal void ScaleTexture(int multiplier, TextureFormat format = TextureFormat.RGB24)
         {
