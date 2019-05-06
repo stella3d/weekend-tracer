@@ -20,7 +20,6 @@ namespace RayTracingWeekend
         ChapterSix m_ChapterSix;
         ChapterSeven m_ChapterSeven;
         ChapterSevenAlternate m_ChapterSevenAlt;
-        ChapterEightParallel m_ChapterEightParallel;
         
         BatchedTracer m_ChapterEight;
         BatchedTracer m_ChapterNine;
@@ -63,7 +62,6 @@ namespace RayTracingWeekend
             m_ChapterSix = new ChapterSix();
             m_ChapterSeven = new ChapterSeven();
             m_ChapterSevenAlt = new ChapterSevenAlternate();
-            m_ChapterEightParallel = new ChapterEightParallel();
             
             m_ChapterEight = new BatchedTracer(ExampleSphereSets.ChapterEight(), CameraFrame.Default);
             m_ChapterNine = new BatchedTracer(ExampleSphereSets.FiveWithDielectric(), CameraFrame.Default);
@@ -111,7 +109,7 @@ namespace RayTracingWeekend
 
             DrawChapterSix();
             DrawChapterSeven();
-            DrawChapterSevenAlt();
+            //DrawChapterSevenAlt();
             //DrawChapterEight();
             DrawChapterEightPro();
 
@@ -219,21 +217,6 @@ namespace RayTracingWeekend
 
             m_PreviousAbsorbRateSeven = m_AbsorbRateSeven;
             DrawChapterBasic(m_ChapterSevenAlt, "7");
-        }
-        
-        void DrawChapterEight()
-        {
-            m_ChapterEightParallel.canvasScale = s_CanvasScaling;
-            EditorGUILayout.BeginHorizontal();
-            EditorGUI.BeginDisabledGroup(true);
-            var texture = m_ChapterEightParallel.texture;
-            var vec = new Vector2Int(texture.width, texture.height);
-            EditorGUILayout.Vector2IntField("Canvas Size", vec);
-            EditorGUI.EndDisabledGroup();
-            EditorGUILayout.EndHorizontal();
-            m_SampleCountEight = EditorGUILayout.IntField("Sample Count", m_SampleCountEight);
-            m_ChapterEightParallel.numberOfSamples = m_SampleCountEight;
-            DrawChapterBasic(m_ChapterEightParallel, "8");
         }
         
         void DrawChapterEightPro()
