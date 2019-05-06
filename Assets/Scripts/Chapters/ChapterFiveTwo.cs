@@ -20,6 +20,8 @@ namespace RayTracingWeekend
             {
                 var nx = (float) size.x;
                 var ny = (float) size.y;
+                
+                // TODO - make this a CameraFrame input / default
                 var lowerLeftCorner = new float3(-2, -1, -1);
                 var horizontal = new float3(4, 0, 0);
                 var vertical = new float3(0, 2, 0);
@@ -52,34 +54,33 @@ namespace RayTracingWeekend
                 return Utils.BackgroundColor(ref r);
             }
         }
-
-        public override void DrawToTexture()
+        
+        HitableArray<Sphere> m_Spheres = new HitableArray<Sphere>(2)
         {
-            // TODO - make these permanently allocated ?
-            var spheres = new HitableArray<Sphere>(2, Allocator.TempJob)
+            Objects =
             {
-                Objects =
-                {
-                    [0] = new Sphere(new float3(0f, 0f, -1f), 0.5f),
-                    [1] = new Sphere(new float3(0f, -100.5f, -1f), 100f)
-                }
-            };
+                [0] = new Sphere(new float3(0f, 0f, -1f), 0.5f),
+                [1] = new Sphere(new float3(0f, -100.5f, -1f), 100f)
+            }
+        };
 
-            var job = new SecondImageJob()
-            {
-                size = Constants.DefaultImageSize,
-                World = spheres,
-                Pixels = GetBuffer()
-            };
-            
-            job.Run();
-            texture.LoadAndApply(job.Pixels);
-            spheres.Dispose();
+        public override void Dispose()
+        {
+            base.Dispose();
+            m_Spheres.Dispose();
         }
 
         public override JobHandle Schedule(JobHandle dependency = default)
         {
-            throw new System.NotImplementedException();
+            var job = new SecondImageJob()
+            {
+                size = Constants.DefaultImageSize,
+                World = m_Spheres,
+                Pixels = pixelBuffer
+            };
+            
+            jobHandle = job.Schedule(dependency);
+            return jobHandle;
         }
     }
 }

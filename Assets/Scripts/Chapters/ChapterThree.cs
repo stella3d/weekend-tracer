@@ -45,10 +45,6 @@ namespace RayTracingWeekend
             }
         }
 
-        public override void DrawToTexture()
-        {
-        }
-
         public override JobHandle Schedule(JobHandle dependency)
         {
             var job = new Job()

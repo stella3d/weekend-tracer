@@ -14,7 +14,6 @@ namespace RayTracingWeekend
         public struct Job : IJob
         {
             public int2 size;
-            
             public float3 spherePosition;
             public float3 sphereColor;
 
@@ -60,23 +59,18 @@ namespace RayTracingWeekend
             }
         }
 
-        public override void DrawToTexture()
+        public override JobHandle Schedule(JobHandle dependency = default)
         {
             var job = new Job()
             {
                 sphereColor = sphereColor,
                 spherePosition = new float3(0f, 0f, spherePositionZ),
                 size = Constants.DefaultImageSize,
-                Pixels = GetBuffer()
+                Pixels = pixelBuffer
             };
-            
-            job.Run();
-            texture.LoadAndApply(job.Pixels);
-        }
 
-        public override JobHandle Schedule(JobHandle dependency = default)
-        {
-            throw new System.NotImplementedException();
+            jobHandle = job.Schedule(dependency);
+            return jobHandle;
         }
     }
 }

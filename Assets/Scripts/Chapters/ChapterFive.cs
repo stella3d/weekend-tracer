@@ -7,9 +7,7 @@ namespace RayTracingWeekend
 {
     public class ChapterFive : Chapter<Color24>
     {
-        // TODO - put this into example sphere sets ?
         public float spherePositionZ = -1f;
-        public float3 sphereColor = new float3(1f, 0f, 0f);
         
         [BurstCompile]
         public struct Job : IJob
@@ -30,15 +28,15 @@ namespace RayTracingWeekend
                 var origin = new float3();
                 for (float j = 0; j < size.y; j++)
                 {
+                    var rowIndex = j * nx;
                     for (float i = 0; i < size.x; i++)
                     {
                         float u = i / nx;
                         float v = j / ny;
                         Ray r = new Ray(origin, lowerLeftCorner + u * horizontal + v * vertical);
-                        float3 col = Color(r);
 
-                        var index = (int) (j * nx + i);
-                        Pixels[index] = col.ToRgb24();
+                        var index = (int) (rowIndex + i);
+                        Pixels[index] = Color(r).ToRgb24();
                     }
                 }
             }
@@ -69,27 +67,17 @@ namespace RayTracingWeekend
             }
         }
 
-        public override void Dispose()
-        {
-            throw new System.NotImplementedException();
-        }
-
-        public override void DrawToTexture()
+        public override JobHandle Schedule(JobHandle dependency = default)
         {
             var job = new Job()
             {
                 spherePosition = new float3(0f, 0f, spherePositionZ),
                 size = Constants.DefaultImageSize,
-                Pixels = GetBuffer()
+                Pixels = pixelBuffer
             };
-            
-            job.Run();
-            texture.LoadAndApply(job.Pixels);
-        }
 
-        public override JobHandle Schedule(JobHandle dependency = default)
-        {
-            throw new System.NotImplementedException();
+            jobHandle = job.Schedule(dependency);
+            return jobHandle;
         }
     }
 }

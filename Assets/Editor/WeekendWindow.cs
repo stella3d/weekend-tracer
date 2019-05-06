@@ -153,11 +153,16 @@ namespace RayTracingWeekend
             m_ChapterFour.sphereColor = new float3(color.r / rgbScale, color.g / rgbScale, color.b / rgbScale);
             m_ChapterFour.spherePositionZ = m_Chapter4ZPosition;
             
+            DrawChapterBasic(m_ChapterFour, "4");
+            /*
+            
             if (GUILayout.Button($"Draw Chapter 4 Image"))
                 m_ChapterFour.DrawToTexture();
 
+
             DrawTexture(m_ChapterFour.texture);
             EditorGUILayout.Separator();
+            */
         }
 
         void DrawChapterSix()
@@ -175,7 +180,8 @@ namespace RayTracingWeekend
 
             if (!Mathf.Approximately(m_AbsorbRateSeven, m_PreviousAbsorbRateSeven))
             {
-                m_ChapterSeven.DrawToTexture();
+                var handle = m_ChapterSeven.Schedule();
+                handle.Complete();
             }
 
             m_PreviousAbsorbRateSeven = m_AbsorbRateSeven;

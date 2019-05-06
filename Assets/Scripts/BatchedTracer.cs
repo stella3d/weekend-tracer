@@ -168,7 +168,7 @@ namespace RayTracingWeekend
             }
         }
 
-        public override void DrawToTexture()
+        public void DrawToTexture()
         {
             if (clearOnDraw)
             {

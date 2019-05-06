@@ -34,8 +34,6 @@ namespace RayTracingWeekend
 
         public virtual void Dispose() {}
 
-        public abstract void DrawToTexture();
-
         public abstract JobHandle Schedule(JobHandle dependency = default);
 
         protected void UploadTextureBuffer()
