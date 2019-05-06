@@ -21,9 +21,12 @@ namespace RayTracingWeekend
             public Random random;
             public CameraFrame camera;
             
+            // implementing as a straight translation of the C++ gave me a stack overflow
+            int recursionCounter;
+            
             [ReadOnly] public HitableArray<Sphere> World;
             [WriteOnly] public NativeArray<Color24> Pixels;
-
+            
             public void Execute()
             {
                 var nx = (float) size.x;
@@ -50,31 +53,13 @@ namespace RayTracingWeekend
                 }
             }
 
-            // TODO - only use utils version of this
-            float3 RandomInUnitSphere()
-            {
-                var r = random;
-                float3 p;
-                float3 one = new float3(1f, 1f, 1f);
-                do
-                {
-                    p = 2f * new float3(r.NextFloat(), r.NextFloat(), r.NextFloat()) - one;
-                } 
-                while (p.x * p.x + p.y * p.y + p.z * p.z >= 1.0f);
-                return p;
-            }
-
-            // implementing as a straight translation of the C++ gave me a stack overflow
-            int recursionCounter;
-
             public float3 Color(Ray r, HitableArray<Sphere> world)
             {
                 var rec = new HitRecord();
                 if (recursionCounter < maxHits && world.Hit(r, 0.001f, float.MaxValue, ref rec))
                 {
                     recursionCounter++;
-                    //var target = rec.p + rec.normal + Utils.RandomInUnitSphere(random);
-                    var target = rec.p + rec.normal + RandomInUnitSphere();
+                    var target = rec.p + rec.normal + Utils.RandomInUnitSphere(random);
                     return absorbRate * Color(new Ray(rec.p, target - rec.p), world);
                 }
                 
@@ -82,42 +67,8 @@ namespace RayTracingWeekend
             }
         }
 
-        // TODO - make this respect canvas scaling options
-        int m_CanvasScale = 1;
-
         // TODO - factor into base class ? ALSO RESET TO ACTUAL BOOK SPHERE
         HitableArray<Sphere> m_Spheres = ExampleSphereSets.FourVaryingSize();
-        
-        public override void Dispose()
-        {
-            base.Dispose();
-            m_Spheres.Dispose();
-        }
-
-        public void DrawToTexture()
-        {
-            ScaleTexture(m_CanvasScale);
-            var spheres = ExampleSphereSets.FourVaryingSize();
-            
-            var rand = new Random();
-            rand.InitState();
-
-            var job = new Job()
-            {
-                absorbRate = absorbRate,
-                maxHits = 32,
-                camera = CameraFrame.Default,
-                numberOfSamples = numberOfSamples,
-                random = rand,
-                size = Constants.DefaultImageSize * m_CanvasScale,
-                World = spheres,
-                Pixels = pixelBuffer
-            };
-            
-            job.Run();
-            texture.LoadAndApply(job.Pixels);
-            spheres.Dispose();
-        }
 
         public override JobHandle Schedule(JobHandle dependency = default)
         {
@@ -131,13 +82,19 @@ namespace RayTracingWeekend
                 camera = CameraFrame.Default,
                 numberOfSamples = numberOfSamples,
                 random = rand,
-                size = Constants.DefaultImageSize * m_CanvasScale,
+                size = texture.GetSize(),
                 World = m_Spheres,
                 Pixels = pixelBuffer
             };
             
             jobHandle = job.Schedule(dependency);
             return jobHandle;
+        }
+        
+        public override void Dispose()
+        {
+            base.Dispose();
+            m_Spheres.Dispose();
         }
     }
 }

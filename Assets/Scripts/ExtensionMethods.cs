@@ -37,6 +37,11 @@ namespace RayTracingWeekend
             var c = material.color.linear;
             return new float3(c.r, c.g, c.b);
         }
+        
+        public static int2 GetSize(this Texture texture)
+        {
+            return new int2(texture.width, texture.height);
+        }
 
         public static void DisposeIfCreated<T>(this NativeArray<T> array)
             where T: struct

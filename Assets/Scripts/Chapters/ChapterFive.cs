@@ -19,13 +19,13 @@ namespace RayTracingWeekend
 
             public void Execute()
             {
-                var nx = (float) size.x;
-                var ny = (float) size.y;
-                // TODO - make this a CameraFrame input / default
                 var lowerLeftCorner = new float3(-2, -1, -1);
                 var horizontal = new float3(4, 0, 0);
                 var vertical = new float3(0, 2, 0);
                 var origin = new float3();
+                
+                var nx = (float) size.x;
+                var ny = (float) size.y;
                 for (float j = 0; j < size.y; j++)
                 {
                     var rowIndex = j * nx;
