@@ -1,6 +1,7 @@
 using System;
 using Unity.Collections;
 using Unity.Jobs;
+using Unity.Mathematics;
 using UnityEngine;
 
 namespace RayTracingWeekend
@@ -8,6 +9,8 @@ namespace RayTracingWeekend
     public abstract class Chapter<TPixel> : IDisposable
         where TPixel: struct
     {
+        public TextureFormat textureFormat = TextureFormat.RGB24;
+        
         public Texture2D texture = new Texture2D(Constants.DefaultImageSize.x, Constants.DefaultImageSize.y, 
                                                  TextureFormat.RGB24, false);
 
@@ -27,6 +30,12 @@ namespace RayTracingWeekend
             Setup();
         }
 
+        public void Resize(int2 size)
+        {
+            texture = new Texture2D(size.x, size.y, textureFormat, false);
+            pixelBuffer = texture.GetRawTextureData<TPixel>();
+        }
+        
         public virtual void Setup()
         {
             pixelBuffer = texture.GetRawTextureData<TPixel>();

@@ -13,7 +13,7 @@ namespace RayTracingWeekend
         static GUIStyle k_TotalSamplesStyle; 
         static GUILayoutOption k_LargeHeaderHeight;
         
-        ChaptersOneAndTwo m_ChaptersOneAndOneAndTwo;
+        ChaptersOneAndTwo m_ChaptersOneAndTwo;
         ChapterThree m_ChapterThree;
         ChapterFour m_ChapterFour;
         ChapterFive m_ChapterFive;
@@ -35,8 +35,8 @@ namespace RayTracingWeekend
         Vector2 m_ScrollPosition;
 
         // all state for user options goes under here
-        int m_PreviousCanvasScaling;
         int m_SelectedScaleOption = 4;
+        int m_PreviousScaleOption = 4;
         readonly int[] m_ScaleOptions = { 1, 2, 4, 6, 8, 10};
         string[] m_ScaleOptionLabels;
         string m_CanvasSizeLabel;
@@ -65,11 +65,14 @@ namespace RayTracingWeekend
             SetupStyles();
             m_DummyHandle = new JobHandle();
             m_DummyHandle.Complete();
-            
             m_Disposed = false;
             m_ScaleOptionLabels = m_ScaleOptions.Select((i => i.ToString())).ToArray();
-            
-            m_ChaptersOneAndOneAndTwo = new ChaptersOneAndTwo();
+            SetupChapters();
+        }
+
+        void SetupChapters()
+        {
+            m_ChaptersOneAndTwo = new ChaptersOneAndTwo();
             m_ChapterThree = new ChapterThree();
             m_ChapterFour = new ChapterFour();
             m_ChapterFive = new ChapterFive();
@@ -82,6 +85,26 @@ namespace RayTracingWeekend
             m_ChapterNine = new BatchedTracer(ExampleSphereSets.FiveWithDielectric(), CameraFrame.Default);
             m_ChapterTen = new BatchedTracer(ExampleSphereSets.FiveWithDielectric(), CameraFrame.ChapterTen);
             m_ChapterEleven = new BatchedTracer(ExampleSphereSets.FiveWithDielectric(), CameraFrame.ChapterEleven);
+        }
+        
+        void ScaleChapters()
+        {
+            var size = Constants.DefaultImageSize * m_SelectedScaleOption;
+            m_ChaptersOneAndTwo.Resize(size);
+            m_ChapterThree.Resize(size);
+            m_ChapterFour.Resize(size);
+            m_ChapterFive.Resize(size);
+            m_ChapterFiveTwo.Resize(size);
+            m_ChapterSix.Resize(size);
+            m_ChapterSeven.Resize(size);
+
+            /*
+            // from chapter 8 on, the same implementation is re-used
+            m_ChapterEight = new BatchedTracer(ExampleSphereSets.ChapterEight(), CameraFrame.Default);
+            m_ChapterNine = new BatchedTracer(ExampleSphereSets.FiveWithDielectric(), CameraFrame.Default);
+            m_ChapterTen = new BatchedTracer(ExampleSphereSets.FiveWithDielectric(), CameraFrame.ChapterTen);
+            m_ChapterEleven = new BatchedTracer(ExampleSphereSets.FiveWithDielectric(), CameraFrame.ChapterEleven);
+            */
         }
 
         void Dispose()
@@ -106,7 +129,7 @@ namespace RayTracingWeekend
 
             DrawGlobalOptions();
 
-            DrawChapterBasic(m_ChaptersOneAndOneAndTwo, "1 & 2");
+            DrawChapterBasic(m_ChaptersOneAndTwo, "1 & 2");
             DrawChapterBasic(m_ChapterThree, "3");
             EditorGUILayout.Space();
             DrawChapterFour();
@@ -147,6 +170,14 @@ namespace RayTracingWeekend
             EditorGUILayout.LabelField(label, maxWidth);
             m_SelectedScaleOption = EditorGUILayout.IntPopup(m_SelectedScaleOption, m_ScaleOptionLabels, 
                 m_ScaleOptions, maxWidth);
+
+            if (m_PreviousScaleOption != m_SelectedScaleOption)
+            {
+                // resize our canvases if we've changed canvas scale
+                ScaleChapters();
+            }
+
+            m_PreviousScaleOption = m_SelectedScaleOption;
 
             var size = Constants.DefaultImageSize * m_SelectedScaleOption;
             m_CanvasSizeLabel = $"Resolution: {size.x} x {size.y}";
