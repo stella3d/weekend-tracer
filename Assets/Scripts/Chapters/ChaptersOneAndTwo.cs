@@ -48,29 +48,22 @@ namespace RayTracingWeekend
         // TODO - factor all of these into a common method
         public override void DrawToTexture()
         {
-            /*
-            var job = new Job()
-            {
-                size = Constants.DefaultImageSize,
-                Pixels = GetBuffer()
-            };
-
-            job.Run();
-            */
-            
-            jobHandle.Complete();
             texture.LoadAndApply(pixelBuffer);
         }
 
-        public override JobHandle Schedule()
+        public override JobHandle Schedule(JobHandle dependency = default)
         {
+            if(!jobHandle.IsCompleted)
+                jobHandle.Complete();
+            
             var job = new Job()
             {
                 size = Constants.DefaultImageSize,
                 Pixels = pixelBuffer
             };
 
-            return job.Schedule();
+            jobHandle = job.Schedule(dependency);
+            return jobHandle;
         }
     }
 }

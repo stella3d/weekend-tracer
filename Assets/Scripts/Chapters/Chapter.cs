@@ -11,7 +11,7 @@ namespace RayTracingWeekend
         public Texture2D texture = new Texture2D(Constants.DefaultImageSize.x, Constants.DefaultImageSize.y, 
                                                  TextureFormat.RGB24, false);
 
-        public JobHandle jobHandle { get; private set; }
+        public JobHandle jobHandle { get; protected set; }
         
         public NativeArray<TPixel> pixelBuffer { get; private set; }
 
@@ -36,7 +36,19 @@ namespace RayTracingWeekend
 
         public abstract void DrawToTexture();
 
-        public abstract JobHandle Schedule();
+        public abstract JobHandle Schedule(JobHandle dependency = default);
+
+        protected void UploadTextureBuffer()
+        {
+            texture.LoadAndApply(pixelBuffer);
+        }
+
+        public void Complete(bool updateTexture = true)
+        {
+            jobHandle.Complete();
+            if (updateTexture)
+                UploadTextureBuffer();
+        }
 
         internal void ScaleTexture(int multiplier, TextureFormat format = TextureFormat.RGB24)
         {

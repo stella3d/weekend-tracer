@@ -77,7 +77,7 @@ namespace RayTracingWeekend
             spheres.Dispose();
         }
 
-        public override JobHandle Schedule()
+        public override JobHandle Schedule(JobHandle dependency = default)
         {
             throw new System.NotImplementedException();
         }

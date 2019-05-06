@@ -1,5 +1,6 @@
 ﻿using System.Linq;
 using Unity.EditorCoroutines.Editor;
+using Unity.Jobs;
 using Unity.Mathematics;
 using UnityEditor;
 using UnityEngine;
@@ -57,6 +58,9 @@ namespace RayTracingWeekend
 
         void OnEnable()
         {
+            m_DummyHandle = new JobHandle();
+            m_DummyHandle.Complete();
+            
             m_Disposed = false;
             m_ScaleOptionLabels = m_ScaleOptions.Select((i => i.ToString())).ToArray();
             
@@ -293,16 +297,17 @@ namespace RayTracingWeekend
             EditorGUILayout.Separator();
         }
 
+        JobHandle m_DummyHandle;
+
         // schedule a job, immediately complete it and update the texture
         static void CompleteAndDraw<T>(Chapter<T> chapter) where T: struct
         {
-            chapter.Schedule().Complete();
-            chapter.DrawToTexture();
+            chapter.Schedule();
+            chapter.Complete();
         }
 
         static void DrawTexture(Texture2D texture)
         {
-            var size = Constants.DefaultImageSize;
             var rect = EditorGUILayout.GetControlRect(GUILayout.Width(texture.width), GUILayout.Height(texture.height));
             EditorGUI.DrawPreviewTexture(rect, texture, null, ScaleMode.ScaleToFit);
         }

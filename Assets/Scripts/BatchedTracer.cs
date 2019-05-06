@@ -58,6 +58,7 @@ namespace RayTracingWeekend
         public HitableArray<Sphere> Spheres;
         
         public JobHandle m_Handle;
+        JobHandle m_DummyHandle;
         
         int m_PixelCount;
 
@@ -94,6 +95,9 @@ namespace RayTracingWeekend
         public override void Setup()
         {
             //Dispose();
+            m_DummyHandle = new JobHandle();
+            m_DummyHandle.Complete();
+            
             ScaleTexture(canvasScale, TextureFormat.RGBAFloat);
             var length = texture.height * texture.width;
 
@@ -200,7 +204,7 @@ namespace RayTracingWeekend
             texture.LoadAndApply(m_TextureBuffer, false);
         }
 
-        public override JobHandle Schedule()
+        public override JobHandle Schedule(JobHandle dependency = default)
         {
             throw new NotImplementedException();
         }

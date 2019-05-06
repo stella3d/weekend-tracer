@@ -87,7 +87,7 @@ namespace RayTracingWeekend
             texture.LoadAndApply(job.Pixels);
         }
 
-        public override JobHandle Schedule()
+        public override JobHandle Schedule(JobHandle dependency = default)
         {
             throw new System.NotImplementedException();
         }
