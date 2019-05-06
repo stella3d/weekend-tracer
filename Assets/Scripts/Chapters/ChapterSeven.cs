@@ -2,7 +2,6 @@
 using Unity.Collections;
 using Unity.Jobs;
 using Unity.Mathematics;
-using UnityEngine;
 using Random = Unity.Mathematics.Random;
 
 namespace RayTracingWeekend
@@ -16,19 +15,13 @@ namespace RayTracingWeekend
         public struct Job : IJob
         {
             public float absorbRate;
-            
             public int maxHits;
-            
             public int2 size;
-
             public int numberOfSamples;
-
             public Random random;
-
             public CameraFrame camera;
             
             [ReadOnly] public HitableArray<Sphere> World;
-            
             [WriteOnly] public NativeArray<Color24> Pixels;
 
             public void Execute()
@@ -37,9 +30,10 @@ namespace RayTracingWeekend
                 var ny = (float) size.y;
                 for (float j = 0; j < size.y; j++)
                 {
+                    var rowIndex = j * nx;
                     for (float i = 0; i < size.x; i++)
                     {
-                        var index = (int) (j * nx + i);
+                        var index = (int) (rowIndex + i);
                         float3 col = new float3();
                         for (int s = 0; s < numberOfSamples; s++)
                         {
@@ -56,6 +50,7 @@ namespace RayTracingWeekend
                 }
             }
 
+            // TODO - only use utils version of this
             float3 RandomInUnitSphere()
             {
                 var r = random;
@@ -78,6 +73,7 @@ namespace RayTracingWeekend
                 if (recursionCounter < maxHits && world.Hit(r, 0.001f, float.MaxValue, ref rec))
                 {
                     recursionCounter++;
+                    //var target = rec.p + rec.normal + Utils.RandomInUnitSphere(random);
                     var target = rec.p + rec.normal + RandomInUnitSphere();
                     return absorbRate * Color(new Ray(rec.p, target - rec.p), world);
                 }
@@ -87,9 +83,18 @@ namespace RayTracingWeekend
         }
 
         // TODO - make this respect canvas scaling options
-        int m_CanvasScale = 4;
+        int m_CanvasScale = 1;
 
-        public override void DrawToTexture()
+        // TODO - factor into base class ? ALSO RESET TO ACTUAL BOOK SPHERE
+        HitableArray<Sphere> m_Spheres = ExampleSphereSets.FourVaryingSize();
+        
+        public override void Dispose()
+        {
+            base.Dispose();
+            m_Spheres.Dispose();
+        }
+
+        public void DrawToTexture()
         {
             ScaleTexture(m_CanvasScale);
             var spheres = ExampleSphereSets.FourVaryingSize();
@@ -106,7 +111,7 @@ namespace RayTracingWeekend
                 random = rand,
                 size = Constants.DefaultImageSize * m_CanvasScale,
                 World = spheres,
-                Pixels = GetBuffer(Allocator.TempJob, m_CanvasScale)
+                Pixels = pixelBuffer
             };
             
             job.Run();
@@ -116,7 +121,23 @@ namespace RayTracingWeekend
 
         public override JobHandle Schedule(JobHandle dependency = default)
         {
-            throw new System.NotImplementedException();
+            var rand = new Random();
+            rand.InitState();
+
+            var job = new Job()
+            {
+                absorbRate = absorbRate,
+                maxHits = 32,
+                camera = CameraFrame.Default,
+                numberOfSamples = numberOfSamples,
+                random = rand,
+                size = Constants.DefaultImageSize * m_CanvasScale,
+                World = m_Spheres,
+                Pixels = pixelBuffer
+            };
+            
+            jobHandle = job.Schedule(dependency);
+            return jobHandle;
         }
     }
 }
