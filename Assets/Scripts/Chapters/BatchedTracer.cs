@@ -80,9 +80,10 @@ namespace RayTracingWeekend
                 var ny = (float) size.y;
                 for (float j = 0; j < size.y; j++)
                 {
+                    var rowIndex = j * nx;
                     for (float i = 0; i < size.x; i++)
                     {
-                        var index = (int) (j * nx + i);
+                        var index = (int) (rowIndex + i);
                         float u = (i + random.NextFloat()) / nx;
                         float v = (j + random.NextFloat()) / ny;
                         Ray r = camera.GetRay(u, v, random);
@@ -131,9 +132,10 @@ namespace RayTracingWeekend
                 var ny = (float) size.y;
                 for (float j = 0; j < size.y; j++)
                 {
+                    var rowIndex = j * nx;
                     for (float i = 0; i < size.x; i++)
                     {
-                        var index = (int) (j * nx + i);
+                        var index = (int) (rowIndex + i);
                         float u = (i + random.NextFloat()) / nx;
                         float v = (j + random.NextFloat()) / ny;
                         Ray r = camera.GetRay(u, v);
@@ -161,16 +163,6 @@ namespace RayTracingWeekend
                 }
 
                 return Utils.BackgroundColor(ref r);
-            }
-        }
-
-        struct ClearAccumulatedJob<T> : IJobParallelFor where T: struct
-        {
-            [WriteOnly] public NativeArray<T> Buffer;
-            
-            public void Execute(int index)
-            {
-                Buffer[index] = default;
             }
         }
 

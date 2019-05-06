@@ -142,7 +142,7 @@ namespace RayTracingWeekend
         public CameraFrame(float3 lookFrom, float3 lookAt, float3 vup, float vfov, float aspect)
         {
             lensRadius = 1f;
-            float theta = (float)(vfov * math.PI / 180f);
+            float theta = vfov * math.PI / 180f;
             float halfHeight = math.tan(theta / 2);
             float halfWidth = aspect * halfHeight;
             origin = lookFrom;

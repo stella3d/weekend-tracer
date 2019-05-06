@@ -1,3 +1,4 @@
+using System.Runtime.CompilerServices;
 using Unity.Collections;
 using Unity.Mathematics;
 using UnityEngine;
@@ -6,6 +7,12 @@ namespace RayTracingWeekend
 {
     public static class ExtensionMethods
     {
+        /// <summary>
+        /// Convert a 96-bit floating point RGB to 24-bit byte RGB
+        /// </summary>
+        /// <param name="color"></param>
+        /// <returns></returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Color24 ToRgb24(this float3 color)
         {
             const float rgbMultiplier = 255.999f;

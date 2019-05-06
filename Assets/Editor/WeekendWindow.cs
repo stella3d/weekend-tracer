@@ -156,8 +156,6 @@ namespace RayTracingWeekend
             EditorGUILayout.Separator();
         }
 
-
-
         void DrawChapterSix()
         {
             m_ChapterSix.numberOfSamples = m_SamplesPerPixel;
@@ -204,7 +202,7 @@ namespace RayTracingWeekend
             if (GUILayout.Button($"Draw Chapter Eight Image"))
             {
                 // TODO - better explanation for the batch coroutine
-                var routineEnumerator = m_ChapterEight.BatchCoroutineNoFocus(m_SamplesPerPixel, Repaint);
+                var routineEnumerator = m_ChapterEight.BatchCoroutine(m_SamplesPerPixel, Repaint);
                 m_ChapterEight.Routine = EditorCoroutineUtility.StartCoroutine(routineEnumerator, this);
             }
             
@@ -240,7 +238,7 @@ namespace RayTracingWeekend
 
             if (GUILayout.Button($"Draw Chapter Nine Image"))
             {
-                var routineEnumerator = m_ChapterNine.BatchCoroutineNoFocus(m_SamplesPerPixel, Repaint);
+                var routineEnumerator = m_ChapterNine.BatchCoroutine(m_SamplesPerPixel, Repaint);
                 m_ChapterNine.Routine = EditorCoroutineUtility.StartCoroutine(routineEnumerator, this);
             }
             
