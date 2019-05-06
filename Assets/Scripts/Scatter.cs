@@ -33,7 +33,6 @@ namespace RayTracingWeekend
             float niOverNt;
             attenuation = new float3(1f, 1f, 1f);
             float3 refracted;
-            float reflectProbability;
             float cosine;
             
             if (math.dot(r.direction, rec.normal) > 0f)
@@ -49,7 +48,7 @@ namespace RayTracingWeekend
                 cosine = -math.dot(r.direction, rec.normal) / math.length(r.direction);
             }
 
-            reflectProbability = RayMath.Refract(r.direction, outwardNormal, niOverNt, out refracted) 
+            var reflectProbability = RayMath.Refract(r.direction, outwardNormal, niOverNt, out refracted) 
                 ? RayMath.Schlick(cosine, refractionIndex) : 1f;
 
             scattered = rand.NextFloat() < reflectProbability 
@@ -63,8 +62,6 @@ namespace RayTracingWeekend
         {
             switch (rec.material.type)
             {
-                // TODO - put this switch inside a static Material.Scatter() method ?
-                // also TODO - make the scatter API the same across types
                 case MaterialType.Lambertian:
                     return Diffuse(r, rec, ref attenuation, ref scattered, ref rng);
                 case MaterialType.Metal:
