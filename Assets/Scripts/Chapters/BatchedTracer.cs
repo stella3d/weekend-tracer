@@ -18,16 +18,13 @@ namespace RayTracingWeekend
 
         public NativeArray<float3>[] m_BatchBuffers;
         
+        // TODO - make this an option with 2 / 4 / 6 / 8
         int m_JobCount = 10;
 
         NativeArray<JobHandle> m_BatchHandles;
 
         public HitableArray<Sphere> Spheres;
         
-#if DEBUG_RAYS
-        public NativeArray<Ray> InitialRays;
-#endif
-
         public JobHandle m_Handle;
         
         public int canvasScale { get; set; }
@@ -76,10 +73,6 @@ namespace RayTracingWeekend
 
             [ReadOnly] public HitableArray<Sphere> World;
             [WriteOnly] public NativeArray<float3> Pixels;
-            
-#if DEBUG_RAYS
-            [WriteOnly] public NativeArray<Ray> InitialRays;
-#endif
 
             public void Execute()
             {
@@ -93,10 +86,7 @@ namespace RayTracingWeekend
                         float u = (i + random.NextFloat()) / nx;
                         float v = (j + random.NextFloat()) / ny;
                         Ray r = camera.GetRay(u, v, random);
-#if DEBUG_RAYS
-                        InitialRays[index] = r;
-#endif
-                        Pixels[index] = Color(r, World, 0);
+                        Pixels[index] = math.sqrt(Color(r, World, 0));
                     }
                 }
             }
@@ -108,45 +98,19 @@ namespace RayTracingWeekend
                 {
                     Ray scattered = new Ray();
                     float3 attenuation = new float3();
-                    var albedo = rec.material.albedo;
                     if (depth < 50)
                     {
-                        switch (rec.material.type)
-                        {
-                            // TODO - put this switch inside a static Material.Scatter() method ?
-                            // also TODO - make the scatter API the same across types
-                            case MaterialType.Lambertian:
-                                if (Scatter.Diffuse(random, albedo,
-                                    r, rec, ref attenuation, ref scattered))
-                                {
-                                    return attenuation * Color(scattered, world, depth + 1);
-                                }
-                                break;
-                            case MaterialType.Metal:
-                                if (Scatter.Metal(r, rec, random, ref attenuation, ref scattered))
-                                {
-                                    return attenuation * Color(scattered, world, depth + 1);
-                                }
-                                break;
-                            case MaterialType.Dielectric:
-                                // The dark sphere outline bug was fixed by adding this line, which
-                                // changes the state of the RNG so reflection probability works somehow.
-                                // this doesn't work if you call .NextFloat() inside .Dielectric() ??
-                                // DON'T REMOVE 
-                                random.NextFloat();
-                                if (Scatter.Dielectric(random, r, rec, ref attenuation, ref scattered))
-                                {
-                                    return attenuation * Color(scattered, world, depth + 1);
-                                }
-                                break;
-                        }
+                        if (r.Scatter(rec, ref attenuation, ref scattered, ref random))
+                            return attenuation * Color(scattered, world, depth + 1);
                     }
                     else
                     {
+                        // this ray has run out of bounces - draw a black pixel
                         return new float3();
                     }
                 }
 
+                // the ray didn't hit anything, so draw the background color for this pixel
                 return Utils.BackgroundColor(ref r);
             }
         }
@@ -178,11 +142,6 @@ namespace RayTracingWeekend
                 }
             }
 
-            public float3 GammaColor(float3 linearColor)
-            {
-                return math.sqrt(linearColor);
-            }
-
             public float3 Color(Ray r, HitableArray<Sphere> world, int depth)
             {
                 var rec = new HitRecord();
@@ -190,36 +149,10 @@ namespace RayTracingWeekend
                 {
                     Ray scattered = new Ray();
                     float3 attenuation = new float3();
-                    var albedo = rec.material.albedo;
                     if (depth < 50)
                     {
-                        switch (rec.material.type)
-                        {
-                            // TODO - put this switch inside a static Material.Scatter() method ?
-                            // also TODO - make the scatter API the same across types
-                            case MaterialType.Lambertian:
-                                if (Scatter.Diffuse(random, albedo,
-                                    r, rec, ref attenuation, ref scattered))
-                                {
-                                    return attenuation * Color(scattered, world, depth + 1);
-                                }
-                                break;
-                            case MaterialType.Metal:
-                                if (Scatter.Metal(r, rec, random, ref attenuation, ref scattered))
-                                {
-                                    return attenuation * Color(scattered, world, depth + 1);
-                                }
-                                break;
-                            case MaterialType.Dielectric:
-                                // The dark outline bug was fixed by adding this line that changes the state of the RNG.
-                                // IF THIS IS REMOVED IT BREAKS AGAIN EVEN IF YOU CALL .NextFloat() inside Scatter()
-                                random.NextFloat();
-                                if (Scatter.Dielectric(random, r, rec, ref attenuation, ref scattered))
-                                {
-                                    return attenuation * Color(scattered, world, depth + 1);
-                                }
-                                break;
-                        }
+                        if (r.Scatter(rec, ref attenuation, ref scattered, ref random))
+                            return attenuation * Color(scattered, world, depth + 1);
                     }
                     else
                     {
@@ -258,7 +191,7 @@ namespace RayTracingWeekend
                 {
                     camera = camera,
                     random = rand,
-                    size = Constants.ImageSize * canvasScale,
+                    size = Constants.DefaultImageSize * canvasScale,
                     World = Spheres,
                     Pixels = m_BatchBuffers[i],
                 };
@@ -297,7 +230,7 @@ namespace RayTracingWeekend
                 {
                     camera = camera,
                     random = rand,
-                    size = Constants.ImageSize * canvasScale,
+                    size = Constants.DefaultImageSize * canvasScale,
                     World = Spheres,
                     Pixels = m_BatchBuffers[i]
                 };

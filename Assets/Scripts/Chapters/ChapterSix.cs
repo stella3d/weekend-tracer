@@ -63,6 +63,7 @@ namespace RayTracingWeekend
 
         public override void DrawToTexture()
         {
+            // TODO - make these permanently allocated ?
             var spheres = new HitableArray<Sphere>(2, Allocator.TempJob)
             {
                 Objects =
@@ -80,7 +81,7 @@ namespace RayTracingWeekend
                 camera = CameraFrame.Default,
                 numberOfSamples = numberOfSamples,
                 random = rand,
-                size = Constants.ImageSize,
+                size = Constants.DefaultImageSize,
                 World = spheres,
                 Pixels = GetBuffer()
             };

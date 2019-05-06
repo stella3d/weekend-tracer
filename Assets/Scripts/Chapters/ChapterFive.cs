@@ -7,6 +7,7 @@ namespace RayTracingWeekend
 {
     public class ChapterFive : Chapter<Color24>
     {
+        // TODO - put this into example sphere sets ?
         public float spherePositionZ = -1f;
         public float3 sphereColor = new float3(1f, 0f, 0f);
         
@@ -14,9 +15,7 @@ namespace RayTracingWeekend
         public struct Job : IJob
         {
             public int2 size;
-            
             public float3 spherePosition;
-            public float3 sphereColor;
 
             [WriteOnly] public NativeArray<Color24> Pixels;
 
@@ -73,9 +72,8 @@ namespace RayTracingWeekend
         {
             var job = new Job()
             {
-                sphereColor = sphereColor,
                 spherePosition = new float3(0f, 0f, spherePositionZ),
-                size = Constants.ImageSize,
+                size = Constants.DefaultImageSize,
                 Pixels = GetBuffer()
             };
             

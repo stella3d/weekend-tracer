@@ -24,6 +24,7 @@ namespace RayTracingWeekend
             {
                 var nx = (float) size.x;
                 var ny = (float) size.y;
+                // TODO - make this into a camera default
                 var lowerLeftCorner = new float3(-2, -1, -1);
                 var horizontal = new float3(4, 0, 0);
                 var vertical = new float3(0, 2, 0);
@@ -55,12 +56,7 @@ namespace RayTracingWeekend
 
             public float3 Color(Ray r)
             {
-                if(HitSphere(spherePosition, 0.5f, r))
-                    return sphereColor;
-                
-                float3 unitVector = math.normalize(r.direction);
-                float t = 0.5f * (unitVector.y + 1f);
-                return (1f - t) * Constants.one + t * Constants.blueGradient;
+                return HitSphere(spherePosition, 0.5f, r) ? sphereColor : Utils.BackgroundColor(ref r);
             }
         }
 
@@ -70,7 +66,7 @@ namespace RayTracingWeekend
             {
                 sphereColor = sphereColor,
                 spherePosition = new float3(0f, 0f, spherePositionZ),
-                size = Constants.ImageSize,
+                size = Constants.DefaultImageSize,
                 Pixels = GetBuffer()
             };
             

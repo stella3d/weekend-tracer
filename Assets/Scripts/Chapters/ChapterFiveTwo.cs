@@ -48,15 +48,14 @@ namespace RayTracingWeekend
                     var rn = rec.normal;
                     return 0.5f * new float3(rn.x + 1f, rn.y + 1f, rn.z + 1f);
                 }
-                
-                float3 unitDirection = math.normalize(r.direction);
-                var t = 0.5f * (unitDirection.y + 1f);
-                return (1f - t) * Constants.one + t * Constants.blueGradient;
+
+                return Utils.BackgroundColor(ref r);
             }
         }
 
         public override void DrawToTexture()
         {
+            // TODO - make these permanently allocated ?
             var spheres = new HitableArray<Sphere>(2, Allocator.TempJob)
             {
                 Objects =
@@ -68,7 +67,7 @@ namespace RayTracingWeekend
 
             var job = new Job()
             {
-                size = Constants.ImageSize,
+                size = Constants.DefaultImageSize,
                 World = spheres,
                 Pixels = GetBuffer()
             };

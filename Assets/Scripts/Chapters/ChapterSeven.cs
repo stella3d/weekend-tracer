@@ -86,6 +86,7 @@ namespace RayTracingWeekend
             }
         }
 
+        // TODO - make this respect canvas scaling options
         int m_CanvasScale = 4;
 
         public override void DrawToTexture()
@@ -103,7 +104,7 @@ namespace RayTracingWeekend
                 camera = CameraFrame.Default,
                 numberOfSamples = numberOfSamples,
                 random = rand,
-                size = Constants.ImageSize * m_CanvasScale,
+                size = Constants.DefaultImageSize * m_CanvasScale,
                 World = spheres,
                 Pixels = GetBuffer(Allocator.TempJob, m_CanvasScale)
             };

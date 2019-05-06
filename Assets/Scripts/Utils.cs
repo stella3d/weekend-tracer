@@ -5,90 +5,6 @@ using UnityEditor;
 
 namespace RayTracingWeekend
 {
-    public static class Scatter
-    {
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static bool Diffuse(Random rand, float3 albedo, Ray r, HitRecord rec, ref float3 attenuation, ref Ray scattered)
-        {
-            var target = rec.p + rec.normal + Utils.RandomInUnitSphere(rand);
-            scattered = new Ray(rec.p, target - rec.p);
-            attenuation = albedo;
-            return true;
-        }
-        
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static bool Metal(Ray r, HitRecord rec, Random rand, ref float3 attenuation, ref Ray scattered)
-        {
-            var m = rec.material;
-            float3 reflected = MetalMaterial.Reflect(math.normalize(r.direction), rec.normal);
-            scattered = new Ray(rec.p, reflected + m.fuzziness * Utils.RandomInUnitSphere(rand));
-            attenuation = m.albedo;
-            return math.dot(scattered.direction, rec.normal) > 0;
-        }
-
-        
-        public static bool Dielectric(Random rand, Ray rIn, HitRecord rec, 
-            ref float3 attenuation, ref Ray scattered)
-        {
-            var refractionIndex = rec.material.refractionIndex;
-            float3 outwardNormal;
-            float3 reflected = MetalMaterial.Reflect(rIn.direction, rec.normal);
-            float niOverNt;
-            attenuation = new float3(1f, 1f, 1f);
-            float3 refracted;
-            float reflectProbability;
-            float cosine;
-            
-            if (math.dot(rIn.direction, rec.normal) > 0f)
-            {
-                outwardNormal = -rec.normal;
-                niOverNt = refractionIndex;
-                cosine = refractionIndex * math.dot(rIn.direction, rec.normal) / math.length(rIn.direction);
-            }
-            else
-            {
-                outwardNormal = rec.normal;
-                niOverNt = 1f / refractionIndex;
-                cosine = -math.dot(rIn.direction, rec.normal) / math.length(rIn.direction);
-            }
-
-            reflectProbability = MetalMaterial.Refract(rIn.direction, outwardNormal, niOverNt, out refracted) 
-                ? Utils.Schlick(cosine, refractionIndex) : 1f;
-
-            scattered = rand.NextFloat() < reflectProbability 
-                ? new Ray(rec.p, reflected) : new Ray(rec.p, refracted);
-
-            return true;
-        }
-
-        // TODO - make this a method of Material if possible
-        public static bool Generic(Ray r, HitRecord rec,
-            ref float3 attenuation, ref Ray scattered, ref Random rng)
-        {
-            var material = rec.material;
-            var albedo = material.albedo;
-            switch (material.type)
-            {
-                // TODO - put this switch inside a static Material.Scatter() method ?
-                // also TODO - make the scatter API the same across types
-                case MaterialType.Lambertian:
-                    return Diffuse(rng, albedo, r, rec, ref attenuation, ref scattered);
-                case MaterialType.Metal:
-                    return Metal(r, rec, rng, ref attenuation, ref scattered);
-                case MaterialType.Dielectric:
-                    // The dark sphere outline bug was fixed by adding this line, which
-                    // changes the state of the RNG so reflection probability works somehow.
-                    // this doesn't work if you call .NextFloat() inside .Dielectric() ??
-                    // DON'T REMOVE 
-                    rng.NextFloat();
-                    return Dielectric(rng, r, rec, ref attenuation, ref scattered);
-            }
-
-            return false;
-        }
-    }
-
-
     public static class Utils
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -116,6 +32,12 @@ namespace RayTracingWeekend
             } 
             while (math.dot(p, p) >= 1f);
             return p;
+        }
+        
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static float3 GammaColor(float3 linearColor)
+        {
+            return math.sqrt(linearColor);
         }
         
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

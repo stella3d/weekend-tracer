@@ -1,5 +1,6 @@
 ﻿using System.Runtime.CompilerServices;
 using Unity.Mathematics;
+using ScatterMethod = RayTracingWeekend.Scatter;
 
 namespace RayTracingWeekend
 {
@@ -18,6 +19,13 @@ namespace RayTracingWeekend
         public float3 PointAtParameter(float t)
         {
             return origin + t * direction;
+        }
+        
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public bool Scatter(HitRecord rec,
+            ref float3 attenuation, ref Ray scattered, ref Random rng)
+        {
+            return ScatterMethod.Generic(this, rec, ref attenuation, ref scattered, ref rng);
         }
     }
 }

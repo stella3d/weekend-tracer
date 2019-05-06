@@ -4,7 +4,10 @@ namespace RayTracingWeekend
 {
     public static class Constants
     {
-        public static int2 ImageSize = new int2(200, 100);
+        /// <summary>
+        /// The image size used in the original book
+        /// </summary>
+        public static int2 DefaultImageSize = new int2(200, 100);
         
         public const float rgbMultiplier = 255.999f;
         public static readonly float3 one = new float3(1f, 1f, 1f);

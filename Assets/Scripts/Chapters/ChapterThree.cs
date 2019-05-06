@@ -49,7 +49,7 @@ namespace RayTracingWeekend
         {
             var job = new Job()
             {
-                size = Constants.ImageSize,
+                size = Constants.DefaultImageSize,
                 Pixels = GetBuffer()
             };
             

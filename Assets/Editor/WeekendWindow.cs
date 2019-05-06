@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections;
-using System.Linq;
-using TMPro;
+﻿using System.Linq;
 using Unity.EditorCoroutines.Editor;
 using Unity.Mathematics;
 using UnityEditor;
@@ -11,15 +8,13 @@ namespace RayTracingWeekend
 {
     public class WeekendWindow : EditorWindow
     {
-        ChapterOne m_ChapterOne;
-        ChapterTwo m_ChapterTwo;
+        ChaptersOneAndTwo m_ChaptersOneAndOneAndTwo;
         ChapterThree m_ChapterThree;
         ChapterFour m_ChapterFour;
         ChapterFive m_ChapterFive;
         ChapterFiveTwo m_ChapterFiveTwo;
         ChapterSix m_ChapterSix;
         ChapterSeven m_ChapterSeven;
-        ChapterSevenAlternate m_ChapterSevenAlt;
         
         BatchedTracer m_ChapterEight;
         BatchedTracer m_ChapterNine;
@@ -53,15 +48,13 @@ namespace RayTracingWeekend
             m_Disposed = false;
             m_ScaleOptionLabels = m_ScaleOptions.Select((i => i.ToString())).ToArray();
             
-            m_ChapterOne = new ChapterOne();
-            m_ChapterTwo = new ChapterTwo();
+            m_ChaptersOneAndOneAndTwo = new ChaptersOneAndTwo();
             m_ChapterThree = new ChapterThree();
             m_ChapterFour = new ChapterFour();
             m_ChapterFive = new ChapterFive();
             m_ChapterFiveTwo = new ChapterFiveTwo();
             m_ChapterSix = new ChapterSix();
             m_ChapterSeven = new ChapterSeven();
-            m_ChapterSevenAlt = new ChapterSevenAlternate();
             
             m_ChapterEight = new BatchedTracer(ExampleSphereSets.ChapterEight(), CameraFrame.Default);
             m_ChapterNine = new BatchedTracer(ExampleSphereSets.FiveWithDielectric(), CameraFrame.Default);
@@ -91,14 +84,12 @@ namespace RayTracingWeekend
             {
                 Dispose();
             }
-            
 
             m_ScrollPosition = EditorGUILayout.BeginScrollView(m_ScrollPosition);
 
             DrawGlobalOptions();
 
-            DrawChapterBasic(m_ChapterOne, "1");
-            DrawChapterBasic(m_ChapterTwo, "2");
+            DrawChapterBasic(m_ChaptersOneAndOneAndTwo, "1 & 2");
             DrawChapterBasic(m_ChapterThree, "3");
             
             EditorGUILayout.Space();
@@ -109,8 +100,6 @@ namespace RayTracingWeekend
 
             DrawChapterSix();
             DrawChapterSeven();
-            //DrawChapterSevenAlt();
-            //DrawChapterEight();
             DrawChapterEightPro();
 
             DrawChapterNine();
@@ -134,7 +123,7 @@ namespace RayTracingWeekend
             m_SelectedScaleOption = EditorGUILayout.IntPopup(m_SelectedScaleOption, m_ScaleOptionLabels, 
                 m_ScaleOptions, maxWidth);
 
-            var size = Constants.ImageSize * m_SelectedScaleOption;
+            var size = Constants.DefaultImageSize * m_SelectedScaleOption;
             m_CanvasSizeLabel = $"Resolution: {size.x} x {size.y}";
             EditorGUILayout.LabelField(m_CanvasSizeLabel, GUILayout.MinWidth(180));
             
@@ -158,6 +147,7 @@ namespace RayTracingWeekend
             EditorGUILayout.Separator();
         }
 
+        // TODO - cleanup all this.  Make every chapter use the same sample count option
         int m_SampleCountSix = 16;
         int m_SampleCountSeven = 16;
 
@@ -193,32 +183,6 @@ namespace RayTracingWeekend
             DrawChapterBasic(m_ChapterSeven, "7");
         }
         
-        void DrawChapterSevenAlt()
-        {
-            EditorGUILayout.BeginHorizontal();
-            EditorGUI.BeginDisabledGroup(true);
-            var texture = m_ChapterSevenAlt.texture;
-            var vec = new Vector2Int(texture.width, texture.height);
-            EditorGUILayout.Vector2IntField("Canvas Size", vec);
-            EditorGUI.EndDisabledGroup();
-            EditorGUILayout.EndHorizontal();
-            
-            m_SampleCountSeven = EditorGUILayout.IntField("Sample Count", m_SampleCountSeven);
-            m_ChapterSevenAlt.numberOfSamples = m_SampleCountSeven;
-
-            m_AbsorbRateSeven = EditorGUILayout.Slider("Absorb Rate", m_AbsorbRateSeven, 0.05f, 0.95f);
-            m_ChapterSevenAlt.absorbRate = m_AbsorbRateSeven;
-            
-            if (!Mathf.Approximately(m_AbsorbRateSeven, m_PreviousAbsorbRateSeven))
-            {
-                m_ChapterSevenAlt.canvasScale = s_CanvasScaling;
-                m_ChapterSevenAlt.DrawToTexture();
-            }
-
-            m_PreviousAbsorbRateSeven = m_AbsorbRateSeven;
-            DrawChapterBasic(m_ChapterSevenAlt, "7");
-        }
-        
         void DrawChapterEightPro()
         {
             EditorGUILayout.Space();
@@ -243,7 +207,6 @@ namespace RayTracingWeekend
 
             if (GUILayout.Button($"Draw Chapter Eight Image"))
             {
-                lastTime = Time.time - 0.64f;
                 var routineEnumerator = m_ChapterEight.BatchCoroutineNoFocus(m_SampleCountEight, Repaint);
                 m_ChapterEight.Routine = EditorCoroutineUtility.StartCoroutine(routineEnumerator, this);
             }
@@ -253,9 +216,6 @@ namespace RayTracingWeekend
             EditorGUILayout.Separator();
         }
 
-        float m_ChapterTenFov = 90;
-        float m_PreviousTenFov = 90;
-        
         void DrawChapterNine()
         {
             if (EditorApplication.isCompiling && m_ChapterNine.texture != null)
@@ -283,7 +243,6 @@ namespace RayTracingWeekend
 
             if (GUILayout.Button($"Draw Chapter Nine Image"))
             {
-                lastTime = Time.time - 0.64f;
                 var routineEnumerator = m_ChapterNine.BatchCoroutineNoFocus(m_SampleCountNine, Repaint);
                 m_ChapterNine.Routine = EditorCoroutineUtility.StartCoroutine(routineEnumerator, this);
             }
@@ -308,7 +267,6 @@ namespace RayTracingWeekend
             totalStyle.fontSize = 18;
             totalStyle.fontStyle = FontStyle.Bold;
             var forceHeight = GUILayout.Height(36);
-            
 
             EditorGUILayout.LabelField("Sample Count", EditorStyles.boldLabel); 
             EditorGUILayout.BeginHorizontal(forceHeight, GUILayout.ExpandHeight(true));
@@ -319,7 +277,6 @@ namespace RayTracingWeekend
 
             if (GUILayout.Button($"Draw Chapter Ten Image"))
             {
-                lastTime = Time.time - 0.64f;
                 var routineEnumerator = m_ChapterTen.BatchCoroutineNoFocus(m_SampleCountTen, Repaint);
                 m_ChapterTen.Routine = EditorCoroutineUtility.StartCoroutine(routineEnumerator, this);
             }
@@ -331,7 +288,6 @@ namespace RayTracingWeekend
 
         EditorCoroutine m_Routine;
         
-        float lastTime;
         float lastFovChangeTime;
         
         static void DrawChapterBasic<T>(Chapter<T> chapter, string chapterNumber) where T: struct
@@ -345,7 +301,7 @@ namespace RayTracingWeekend
 
         static void DrawTexture(Texture2D texture)
         {
-            var size = Constants.ImageSize;
+            var size = Constants.DefaultImageSize;
             var rect = EditorGUILayout.GetControlRect(GUILayout.Width(texture.width), GUILayout.Height(texture.height));
             EditorGUI.DrawPreviewTexture(rect, texture, null, ScaleMode.ScaleToFit);
         }
