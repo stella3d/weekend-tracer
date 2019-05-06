@@ -9,6 +9,10 @@ namespace RayTracingWeekend
 {
     public class WeekendWindow : EditorWindow
     {
+        static GUIStyle k_CompletedSamplesStyle; 
+        static GUIStyle k_TotalSamplesStyle; 
+        static GUILayoutOption k_LargeHeaderHeight;
+        
         ChaptersOneAndTwo m_ChaptersOneAndOneAndTwo;
         ChapterThree m_ChapterThree;
         ChapterFour m_ChapterFour;
@@ -58,6 +62,7 @@ namespace RayTracingWeekend
 
         void OnEnable()
         {
+            SetupStyles();
             m_DummyHandle = new JobHandle();
             m_DummyHandle.Complete();
             
@@ -72,6 +77,7 @@ namespace RayTracingWeekend
             m_ChapterSix = new ChapterSix();
             m_ChapterSeven = new ChapterSeven();
             
+            // from chapter 8 on, the same implementation is re-used
             m_ChapterEight = new BatchedTracer(ExampleSphereSets.ChapterEight(), CameraFrame.Default);
             m_ChapterNine = new BatchedTracer(ExampleSphereSets.FiveWithDielectric(), CameraFrame.Default);
             m_ChapterTen = new BatchedTracer(ExampleSphereSets.FiveWithDielectric(), CameraFrame.ChapterTen);
@@ -102,27 +108,33 @@ namespace RayTracingWeekend
 
             DrawChapterBasic(m_ChaptersOneAndOneAndTwo, "1 & 2");
             DrawChapterBasic(m_ChapterThree, "3");
-            
             EditorGUILayout.Space();
             DrawChapterFour();
-            
             DrawChapterBasic(m_ChapterFive, "5.1");
             DrawChapterBasic(m_ChapterFiveTwo, "5.2");
-
             DrawChapterSix();
             DrawChapterSeven();
             DrawChapterEightPro();
-
             DrawChapterNine();
-            
             EditorGUILayout.Space();
-
             DrawChapterTen();
             
             EditorGUILayout.EndScrollView();
         }
 
-        
+        void SetupStyles()
+        {
+            k_CompletedSamplesStyle = new GUIStyle(EditorStyles.boldLabel) {fontSize = 18};
+            k_TotalSamplesStyle = new GUIStyle(EditorStyles.numberField)
+            {
+                fontSize = 18, 
+                fontStyle = FontStyle.Bold, 
+                fixedHeight = 36f
+            };
+            
+            k_LargeHeaderHeight = GUILayout.Height(36);
+        }
+
         void DrawGlobalOptions()
         {
             var maxWidth = GUILayout.MaxWidth(200);
@@ -154,15 +166,6 @@ namespace RayTracingWeekend
             m_ChapterFour.spherePositionZ = m_Chapter4ZPosition;
             
             DrawChapterBasic(m_ChapterFour, "4");
-            /*
-            
-            if (GUILayout.Button($"Draw Chapter 4 Image"))
-                m_ChapterFour.DrawToTexture();
-
-
-            DrawTexture(m_ChapterFour.texture);
-            EditorGUILayout.Separator();
-            */
         }
 
         void DrawChapterSix()
@@ -191,21 +194,11 @@ namespace RayTracingWeekend
         void DrawChapterEightPro()
         {
             EditorGUILayout.Space();
-            EditorGUILayout.Space();
-            var completedStyle = new GUIStyle(EditorStyles.boldLabel);
-            completedStyle.fontSize = 18;
-            var totalStyle = new GUIStyle(EditorStyles.numberField);
-            totalStyle.fontSize = 18;
-            totalStyle.fontStyle = FontStyle.Bold;
-            
-            var forceHeight = GUILayout.Height(36);
-            
             EditorGUILayout.LabelField("Sample Count", EditorStyles.boldLabel); 
-            EditorGUILayout.BeginHorizontal(forceHeight, GUILayout.ExpandHeight(true));
-
+            EditorGUILayout.BeginHorizontal(k_LargeHeaderHeight, GUILayout.ExpandHeight(true));
             
-            EditorGUILayout.LabelField("Completed: " + m_ChapterEight.CompletedSampleCount, completedStyle,
-                forceHeight);
+            EditorGUILayout.LabelField("Completed: " + m_ChapterEight.CompletedSampleCount, k_CompletedSamplesStyle,
+                k_LargeHeaderHeight);
             EditorGUILayout.EndHorizontal();
             EditorGUILayout.Space();
 
@@ -218,31 +211,20 @@ namespace RayTracingWeekend
             
             DrawTexture(m_ChapterEight.texture);
             EditorGUILayout.Separator();
-            EditorGUILayout.Separator();
         }
 
         void DrawChapterNine()
         {
             if (EditorApplication.isCompiling && m_ChapterNine.texture != null)
-            {
                 m_ChapterNine.Dispose();
-            }
 
             EditorGUILayout.Space();
-            EditorGUILayout.Space();
-            // TODO - put the styles in a central place
-            var completedStyle = new GUIStyle(EditorStyles.boldLabel);
-            completedStyle.fontSize = 18;
-            var totalStyle = new GUIStyle(EditorStyles.numberField);
-            totalStyle.fontSize = 18;
-            totalStyle.fontStyle = FontStyle.Bold;
-            var forceHeight = GUILayout.Height(36);
-
             m_ChapterNine.camera = CameraFrame.Default;
 
             EditorGUILayout.LabelField("Sample Count", EditorStyles.boldLabel); 
-            EditorGUILayout.BeginHorizontal(forceHeight, GUILayout.ExpandHeight(true));
-            EditorGUILayout.LabelField("Completed: " + m_ChapterNine.CompletedSampleCount, completedStyle, forceHeight);
+            EditorGUILayout.BeginHorizontal(k_LargeHeaderHeight, GUILayout.ExpandHeight(true));
+            EditorGUILayout.LabelField("Completed: " + m_ChapterNine.CompletedSampleCount, 
+                k_CompletedSamplesStyle, k_LargeHeaderHeight);
             EditorGUILayout.EndHorizontal();
             EditorGUILayout.Space();
 
@@ -254,28 +236,18 @@ namespace RayTracingWeekend
             
             DrawTexture(m_ChapterNine.texture);
             EditorGUILayout.Separator();
-            EditorGUILayout.Separator();
         }
         
         void DrawChapterTen()
         {
             if (EditorApplication.isCompiling && m_ChapterTen.texture != null)
-            {
                 m_ChapterTen.Dispose();
-            }
 
             EditorGUILayout.Space();
-            EditorGUILayout.Space();
-            var completedStyle = new GUIStyle(EditorStyles.boldLabel);
-            completedStyle.fontSize = 18;
-            var totalStyle = new GUIStyle(EditorStyles.numberField);
-            totalStyle.fontSize = 18;
-            totalStyle.fontStyle = FontStyle.Bold;
-            var forceHeight = GUILayout.Height(36);
-
             EditorGUILayout.LabelField("Sample Count", EditorStyles.boldLabel); 
-            EditorGUILayout.BeginHorizontal(forceHeight, GUILayout.ExpandHeight(true));
-            EditorGUILayout.LabelField("Completed: " + m_ChapterTen.CompletedSampleCount, completedStyle, forceHeight);
+            EditorGUILayout.BeginHorizontal(k_LargeHeaderHeight, GUILayout.ExpandHeight(true));
+            EditorGUILayout.LabelField("Completed: " + m_ChapterTen.CompletedSampleCount, 
+                k_CompletedSamplesStyle, k_LargeHeaderHeight);
             EditorGUILayout.EndHorizontal();
             EditorGUILayout.Space();
 
@@ -286,7 +258,6 @@ namespace RayTracingWeekend
             }
             
             DrawTexture(m_ChapterTen.texture);
-            EditorGUILayout.Separator();
             EditorGUILayout.Separator();
         }
 
