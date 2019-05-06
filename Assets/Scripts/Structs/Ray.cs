@@ -1,4 +1,5 @@
-﻿using Unity.Mathematics;
+﻿using System.Runtime.CompilerServices;
+using Unity.Mathematics;
 
 namespace RayTracingWeekend
 {
@@ -13,6 +14,7 @@ namespace RayTracingWeekend
             this.direction = direction;
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public float3 PointAtParameter(float t)
         {
             return origin + t * direction;

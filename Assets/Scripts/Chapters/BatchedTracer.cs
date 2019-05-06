@@ -116,23 +116,25 @@ namespace RayTracingWeekend
                             // TODO - put this switch inside a static Material.Scatter() method ?
                             // also TODO - make the scatter API the same across types
                             case MaterialType.Lambertian:
-                                if (DiffuseMaterial.Scatter(random, albedo,
+                                if (Scatter.Diffuse(random, albedo,
                                     r, rec, ref attenuation, ref scattered))
                                 {
                                     return attenuation * Color(scattered, world, depth + 1);
                                 }
                                 break;
                             case MaterialType.Metal:
-                                if (MetalMaterial.Scatter(r, rec, random, ref attenuation, ref scattered))
+                                if (Scatter.Metal(r, rec, random, ref attenuation, ref scattered))
                                 {
                                     return attenuation * Color(scattered, world, depth + 1);
                                 }
                                 break;
                             case MaterialType.Dielectric:
-                                // The dark outline bug was fixed by adding this line that changes the state of the RNG.
-                                // DON'T REMOVE
+                                // The dark sphere outline bug was fixed by adding this line, which
+                                // changes the state of the RNG so reflection probability works somehow.
+                                // this doesn't work if you call .NextFloat() inside .Dielectric() ??
+                                // DON'T REMOVE 
                                 random.NextFloat();
-                                if (Utils.DielectricScatter(random, r, rec, ref attenuation, ref scattered))
+                                if (Scatter.Dielectric(random, r, rec, ref attenuation, ref scattered))
                                 {
                                     return attenuation * Color(scattered, world, depth + 1);
                                 }
@@ -196,14 +198,14 @@ namespace RayTracingWeekend
                             // TODO - put this switch inside a static Material.Scatter() method ?
                             // also TODO - make the scatter API the same across types
                             case MaterialType.Lambertian:
-                                if (DiffuseMaterial.Scatter(random, albedo,
+                                if (Scatter.Diffuse(random, albedo,
                                     r, rec, ref attenuation, ref scattered))
                                 {
                                     return attenuation * Color(scattered, world, depth + 1);
                                 }
                                 break;
                             case MaterialType.Metal:
-                                if (MetalMaterial.Scatter(r, rec, random, ref attenuation, ref scattered))
+                                if (Scatter.Metal(r, rec, random, ref attenuation, ref scattered))
                                 {
                                     return attenuation * Color(scattered, world, depth + 1);
                                 }
@@ -212,7 +214,7 @@ namespace RayTracingWeekend
                                 // The dark outline bug was fixed by adding this line that changes the state of the RNG.
                                 // IF THIS IS REMOVED IT BREAKS AGAIN EVEN IF YOU CALL .NextFloat() inside Scatter()
                                 random.NextFloat();
-                                if (Utils.DielectricScatter(random, r, rec, ref attenuation, ref scattered))
+                                if (Scatter.Dielectric(random, r, rec, ref attenuation, ref scattered))
                                 {
                                     return attenuation * Color(scattered, world, depth + 1);
                                 }
@@ -259,9 +261,6 @@ namespace RayTracingWeekend
                     size = Constants.ImageSize * canvasScale,
                     World = Spheres,
                     Pixels = m_BatchBuffers[i],
-#if DEBUG_RAYS
-                    InitialRays = InitialRays
-#endif
                 };
 
                 m_BatchHandles[i] = job.Schedule(m_Handle);

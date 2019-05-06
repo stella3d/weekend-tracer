@@ -136,45 +136,6 @@ namespace RayTracingWeekend
             return input;
         }
 
-        public CameraFrame(GameObject unityCamObject, out float3 lookAt)
-        {
-            var unityCam = unityCamObject.GetComponent<Camera>();
-            var transform = unityCamObject.transform;
-
-            var transPos = transform.position;
-            var aspect = unityCam.aspect;
-            var vfov = unityCam.fieldOfView * (1 / aspect);
-            var vup = transform.up;
-
-            lensRadius = 1f;
-
-            var screenMid = new Vector3(unityCam.pixelWidth / 2f, unityCam.pixelHeight / 2f, 0f);
-            var lookRay = unityCam.ScreenPointToRay(screenMid);
-            
-            float3 lookFrom = lookRay.origin;
-            var planeDiff = new Vector3(0f, 0f, unityCam.nearClipPlane);
-            var lookDiff = transform.rotation * planeDiff;
-            lookFrom = (Vector3)lookFrom - lookDiff;
-
-            lookFrom.z *= -1f;
-            //lookFrom.z *= 2f;
-            //lookFrom.z -= 1f;
-            
-            lookAt = lookRay.direction;
-
-            float theta = (float)(vfov * math.PI / 180f);
-            float halfHeight = math.tan(theta / 2f);
-            float halfWidth = aspect * halfHeight;
-            origin = lookFrom;
-            w = math.normalize(lookFrom - lookAt);
-            u = math.normalize(math.cross(vup, w));
-            v = math.cross(w, u);
-            lowerLeftCorner = new float3(-halfWidth, -halfHeight, -1f);        
-            lowerLeftCorner = origin - halfWidth * u - halfHeight * v - w;
-            horizontal = 2 * halfWidth * u;
-            vertical = 2 * halfHeight * v;
-        }
-
         /// <summary>
         /// The camera constructor used in Chapter 10
         /// </summary>
@@ -201,7 +162,7 @@ namespace RayTracingWeekend
             float vfov, float aspect, float aperture = 2f, float focusDistance = 1f)
         {
             lensRadius = aperture / 2;
-            float theta = (float)(vfov * math.PI / 180f);
+            float theta = vfov * math.PI / 180f;
             float halfHeight = math.tan(theta / 2);
             float halfWidth = aspect * halfHeight;
             origin = lookFrom;
@@ -232,9 +193,9 @@ namespace RayTracingWeekend
                 var lookFrom = new float3(-2f, 2f, 1f);
                 var lookAt = new float3(0f, 0f, -1f);
                 var up = new float3(0f, 1f, 0f);
-                float fov = 90f;
+                var fov = 90f;
                 // this aspect ratio is hardcoded based on it being the one from the book
-                float aspectRatio = 200 / 100;
+                var aspectRatio = 2f;
                 var frame = new CameraFrame(lookFrom, lookAt, up, fov, aspectRatio);
                 return frame;
             }
@@ -249,9 +210,9 @@ namespace RayTracingWeekend
                 var distToFocus = math.length(lookFrom - lookAt);
                 var aperture = 2f;
                 var up = new float3(0f, 1f, 0f);
-                float fov = 20f;
+                var fov = 20f;
                 // this aspect ratio is hardcoded based on it being the one from the book
-                float aspectRatio = 200 / 100;
+                var aspectRatio = 2f;
                 var frame = new CameraFrame(lookFrom, lookAt, up, fov, aspectRatio, aperture, distToFocus);
                 return frame;
             }

@@ -1,13 +1,7 @@
 using Unity.Mathematics;
-using UnityEditor;
 
 namespace RayTracingWeekend
 {
-    public interface IMaterialScatter
-    {
-        bool Scatter(Ray r, HitRecord rec, Random rand, ref float3 attenuation, ref Ray scattered);
-    }
-
     // TODO - find a way to make these not monolithic
     public struct Material
     {

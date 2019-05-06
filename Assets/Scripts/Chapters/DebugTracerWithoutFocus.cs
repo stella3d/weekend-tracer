@@ -156,7 +156,7 @@ namespace RayTracingWeekend
                                 }
                                 break;
                             case MaterialType.Dielectric:
-                                if (Utils.DielectricScatter(random, r, rec, ref attenuation, ref scattered))
+                                if (Scatter.Dielectric(random, r, rec, ref attenuation, ref scattered))
                                 {
                                     RecordRaySegment(scattered);
                                     return attenuation * Color(scattered, world, depth + 1);
