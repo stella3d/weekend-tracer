@@ -59,7 +59,7 @@ namespace RayTracingWeekend
         JobHandle m_DummyHandle;
         
         public BatchedTracer(HitableArray<Sphere> spheres, CameraFrame camera, int width, int height)
-            : base(width, height, TextureFormat.RGBA32)
+            : base(width, height, TextureFormat.RGBAFloat)
         {
             this.camera = camera;
             Spheres = spheres;
@@ -187,6 +187,7 @@ namespace RayTracingWeekend
                 m_BatchHandles[i] = job.Schedule(m_Handle);
             }
 
+            // TODO - variable batch size combine job
             var combineJob = new CombineJobFour(m_BatchBuffers, PixelBuffer, CompletedSampleCount);
 
             var batchHandle = JobHandle.CombineDependencies(m_BatchHandles);
@@ -200,6 +201,7 @@ namespace RayTracingWeekend
 
         public override JobHandle Schedule(JobHandle dependency = default)
         {
+            // TODO - this?
             throw new NotImplementedException();
         }
 
@@ -241,23 +243,15 @@ namespace RayTracingWeekend
         // TODO - refactor this to not wait synchronously on the jobs
         public IEnumerator BatchCoroutine(int count, Action onBatchComplete, float cycleTime = 0.64f)
         {
-            // TODO - name the magic number
-            if (Time.time - lastBatchTime < cycleTime)
-                yield return null;
-
-            for (int i = 0; i < count / jobsPerBatch; i++)
-            {
-                DrawToTexture();
-                onBatchComplete();
-                lastBatchTime = Time.time;
-                yield return null;
-            }
-            
-            if(Routine != null)
-                EditorCoroutineUtility.StopCoroutine(Routine);
+            yield return BatchCoroutine(count, DrawToTexture, onBatchComplete, cycleTime);
         }
         
         public IEnumerator BatchCoroutineNoFocus(int count, Action onBatchComplete, float cycleTime = 0.64f)
+        {
+            yield return BatchCoroutine(count, DrawToTextureWithoutFocus, onBatchComplete, cycleTime);
+        }
+        
+        public IEnumerator BatchCoroutine(int count, Action draw, Action onBatchComplete, float cycleTime = 0.64f)
         {
             // TODO - name the magic number
             if (Time.time - lastBatchTime < cycleTime)
@@ -265,7 +259,7 @@ namespace RayTracingWeekend
 
             for (int i = 0; i < count / jobsPerBatch; i++)
             {
-                DrawToTextureWithoutFocus();
+                draw();
                 onBatchComplete();
                 lastBatchTime = Time.time;
                 yield return null;
