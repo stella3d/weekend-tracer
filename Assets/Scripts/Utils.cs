@@ -33,13 +33,37 @@ namespace RayTracingWeekend
             while (math.dot(p, p) >= 1f);
             return p;
         }
-        
+
+        /// <summary>
+        /// Draw the background gradient for any Ray that 
+        /// </summary>
+        /// <param name="r"></param>
+        /// <returns></returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static float3 BackgroundColor(ref Ray r)
         {
             float3 unitDirection = math.normalize(r.direction);
             var t = 0.5f * (unitDirection.y + 1f);
             return (1f - t) * Constants.one + t * Constants.blueGradient;
+        }
+        
+        // flip unity's Z around the z of where the spheres are centered.  
+        // I don't remember quite why this is necessary for the unity -> ray camera translation,
+        // but that part is incomplete and experimental anyway
+        public static float3 FlipZ(float3 input, float originZ = -1f)
+        {
+            if (input.z < -1f)
+            {
+                input.z *= -1f;
+                input.z += originZ;
+            }
+            else
+            {
+                input.z *= -1f;
+                input.z += originZ;
+            }
+
+            return input;
         }
         
         public static void ReallocateIfNeeded<T>(ref NativeArray<T> array, int newLength, Allocator allocator = Allocator.Persistent)

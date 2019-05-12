@@ -29,25 +29,8 @@ namespace RayTracingWeekend
             return new Ray(origin + offset, lowerLeftCorner + s * horizontal + t * vertical - origin - offset);
         }
 
-        public CameraFrame(float vfov, float aspect)
+        public CameraFrame(Camera unityCam, Transform transform, Vector3 lookAtPoint)
         {
-            float theta = vfov * math.PI / 180f;
-            float halfHeight = math.tan(theta / 2);
-            float halfWidth = aspect * halfHeight;
-            lowerLeftCorner = new float3(-halfWidth, -halfHeight, -1f);
-            horizontal = new float3(2 * halfWidth, 0, 0);
-            vertical = new float3(0, 2 * halfHeight, 0);
-            origin = new float3();
-            
-            u = v = w = new float3();
-            lensRadius = 1f;
-        }
-
-        public CameraFrame(GameObject unityCamObject, Vector3 lookAtPoint)
-        {
-            var unityCam = unityCamObject.GetComponent<Camera>();
-            var transform = unityCamObject.transform;
-
             var transPos = transform.position;
             var aspect = unityCam.aspect;
             //var vfov = unityCam.fieldOfView * (1 / aspect);
@@ -56,19 +39,14 @@ namespace RayTracingWeekend
 
             lensRadius = 1f;
 
-            var screenMid = new Vector3(unityCam.pixelWidth / 2f, unityCam.pixelHeight / 2f, 0f);
-            var lookRay = unityCam.ScreenPointToRay(screenMid);
-            
-            //float3 lookFrom = lookRay.origin;
             float3 lookFrom = transPos;
             var planeDiff = new Vector3(0f, 0f, unityCam.nearClipPlane);
             var rotation = transform.rotation;
             var lookDiff = rotation * planeDiff;
-            lookFrom = (Vector3) FlipZ(lookFrom + (float3)lookDiff);
+            lookFrom = (Vector3) Utils.FlipZ(lookFrom + (float3)lookDiff);
 
             float3 lookAt = lookAtPoint;
-
-            float theta = (float)(vfov * math.PI / 180f);
+            float theta = vfov * math.PI / 180f;
             float halfHeight = math.tan(theta / 2f);
             float halfWidth = aspect * halfHeight;
             
@@ -81,23 +59,6 @@ namespace RayTracingWeekend
             lowerLeftCorner = origin - halfWidth * u - halfHeight * v - w;
             horizontal = 2 * halfWidth * u;
             vertical = 2 * halfHeight * v;
-        }
-
-        // flip unity's Z around the z of where the spheres are centered
-        static float3 FlipZ(float3 input, float originZ = -1f)
-        {
-            if (input.z < -1f)
-            {
-                input.z *= -1f;
-                input.z += originZ;
-            }
-            else
-            {
-                input.z *= -1f;
-                input.z += originZ;
-            }
-
-            return input;
         }
 
         /// <summary>

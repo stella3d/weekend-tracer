@@ -17,7 +17,7 @@ namespace RayTracingWeekend
         
         public HitableArray<Sphere> Spheres { get; private set; }
 
-        public CameraFrame Camera { get; private set; }
+        public CameraFrame Camera { get; protected set; }
 
         public event Action onSceneChanged;
         
@@ -41,7 +41,7 @@ namespace RayTracingWeekend
             var camRot = m_MainCamera.transform.rotation;
             if (camPos != m_PreviousCameraPos || camRot != m_PreviousCameraRotation)
             {
-                Camera = new CameraFrame(m_MainCamera.gameObject, LookAtPoint);
+                Camera = new CameraFrame(m_MainCamera, m_MainCamera.transform, LookAtPoint);
                 onSceneChanged?.Invoke();
             }
 

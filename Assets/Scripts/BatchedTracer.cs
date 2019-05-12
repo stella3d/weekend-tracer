@@ -11,7 +11,7 @@ using Random = Unity.Mathematics.Random;
 
 namespace RayTracingWeekend
 {
-    public class BatchedTracer : Chapter<float4>, IDisposable
+    public class BatchedTracer : Chapter<float4>
     {
         const int k_MaxJobsPerBatch = 10;
         static readonly string k_MaxJobsMessage =
@@ -75,11 +75,11 @@ namespace RayTracingWeekend
             m_BatchHandles = new NativeArray<JobHandle>(jobsPerBatch, allocator);
 
             if (m_BatchBuffers != null)
-            {
                 for (int j = 0; j < m_BatchBuffers.Length; j++)
                     m_BatchBuffers[j].DisposeIfCreated();
-            }
+            
 
+            // in sample jobs, we only calculate RGB, no alpha, so use float3 instead of float4
             m_BatchBuffers = new NativeArray<float3>[jobsPerBatch];
             for (int j = 0; j < m_BatchBuffers.Length; j++)
                 m_BatchBuffers[j] = new NativeArray<float3>(pixelCount, allocator);
@@ -130,6 +130,7 @@ namespace RayTracingWeekend
             }
         }
 
+        // TODO - better names
         [BurstCompile]
         public struct SerialJob : IJob
         {
@@ -162,32 +163,8 @@ namespace RayTracingWeekend
 
         public void DrawToTexture()
         {
-            for (int i = 0; i < jobsPerBatch; i++)
-            {
-                var rand = new Random();
-                rand.InitState((uint)i + (uint)CompletedSampleCount + 100);
-                var job = new SerialJobWithFocus()
-                {
-                    camera = camera,
-                    random = rand,
-                    size = texture.GetSize(),
-                    World = Spheres,
-                    Pixels = m_BatchBuffers[i],
-                };
-
-                m_BatchHandles[i] = job.Schedule(m_Handle);
-            }
-
-            // TODO - variable batch size combine job
-            var combineJob = new CombineJobFour(m_BatchBuffers, PixelBuffer, CompletedSampleCount);
-
-            var batchHandle = JobHandle.CombineDependencies(m_BatchHandles);
-            
-            m_Handle = combineJob.Schedule(combineJob.In1.Length, 1024, batchHandle);
-            m_Handle.Complete();
-
-            CompletedSampleCount += jobsPerBatch;
-            texture.LoadAndApply(PixelBuffer, false);
+            m_Handle = ScheduleBatch(ScheduleFocusJob);
+            CompleteAndDraw();
         }
 
         public override JobHandle Schedule(JobHandle dependency = default)
@@ -196,30 +173,58 @@ namespace RayTracingWeekend
             throw new NotImplementedException();
         }
 
-        public void DrawToTextureWithoutFocus()
+        JobHandle ScheduleNoFocusJob(int batchIndex, JobHandle dependency)
+        {
+            var rand = new Random();
+            rand.InitState((uint)batchIndex + (uint)CompletedSampleCount + 100);
+            var job = new SerialJob()
+            {
+                camera = camera,
+                random = rand,
+                size = texture.GetSize(),
+                World = Spheres,
+                Pixels = m_BatchBuffers[batchIndex]
+            };
+            
+            return job.Schedule(dependency);
+        }
+        
+        JobHandle ScheduleFocusJob(int batchIndex, JobHandle dependency)
+        {
+            var rand = new Random();
+            rand.InitState((uint)batchIndex + (uint)CompletedSampleCount + 100);
+            var job = new SerialJobWithFocus()
+            {
+                camera = camera,
+                random = rand,
+                size = texture.GetSize(),
+                World = Spheres,
+                Pixels = m_BatchBuffers[batchIndex]
+            };
+            
+            return job.Schedule(dependency);
+        }
+
+        public JobHandle ScheduleBatch(Func<int, JobHandle, JobHandle> scheduleSingle)
         {
             for (int i = 0; i < jobsPerBatch; i++)
             {
-                var rand = new Random();
-                rand.InitState((uint)i + (uint)CompletedSampleCount + 100);
-                var job = new SerialJob()
-                {
-                    camera = camera,
-                    random = rand,
-                    size = texture.GetSize(),
-                    World = Spheres,
-                    Pixels = m_BatchBuffers[i]
-                };
-
-                m_BatchHandles[i] = job.Schedule(m_Handle);
+                m_BatchHandles[i] = scheduleSingle(i, m_Handle);
             }
-
-            var batchHandle = JobHandle.CombineDependencies(m_BatchHandles);
-            m_Handle = Combine.ScheduleJob(m_BatchBuffers, PixelBuffer, CompletedSampleCount, batchHandle);
             
-            // TODO - make this async
-            m_Handle.Complete();
+            var batchHandle = JobHandle.CombineDependencies(m_BatchHandles);
+            return Combine.ScheduleJob(m_BatchBuffers, PixelBuffer, CompletedSampleCount, batchHandle);
+        }
 
+        public void DrawToTextureWithoutFocus()
+        {
+            m_Handle = ScheduleBatch(ScheduleNoFocusJob);
+            CompleteAndDraw();
+        }
+        
+        public void CompleteAndDraw()
+        {
+            m_Handle.Complete();
             CompletedSampleCount += jobsPerBatch;
             texture.LoadAndApply(PixelBuffer, false);
         }
