@@ -12,8 +12,6 @@ namespace RayTracingWeekend
 
         BatchedTracer m_RayTracer;
 
-        bool m_ClearOnDraw = true;
-        
         int DrawRepeater = 0;
         int DrawRepeaterCounter;
         
@@ -48,8 +46,6 @@ namespace RayTracingWeekend
             if(m_TracerRenderTexture == null)
                 m_TracerRenderTexture = m_RayTracer.texture;
 
-            m_ClearOnDraw = GUILayout.Toggle(m_ClearOnDraw, "clear on re-draw");
-            
             if (GUILayout.Button("update world"))
             {
                 m_SceneManager.UpdateWorld();
@@ -63,7 +59,6 @@ namespace RayTracingWeekend
 
         void OnSceneChange()
         {
-            m_RayTracer.clearOnDraw = m_ClearOnDraw;
             m_RayTracer.camera = m_SceneManager.Camera;
             m_RayTracer.Spheres = m_SceneManager.Spheres;
 
@@ -71,7 +66,6 @@ namespace RayTracingWeekend
             DrawAndRepaint();
             if (DrawRepeater > 0)
             {
-                m_RayTracer.clearOnDraw = false;
                 EditorCoroutineUtility.StartCoroutineOwnerless(DrawAndRepaintRoutine());
             }
             else
@@ -93,8 +87,6 @@ namespace RayTracingWeekend
                 yield return default;
             } 
             while (DrawRepeaterCounter < DrawRepeater);
-
-            m_RayTracer.clearOnDraw = m_ClearOnDraw;
         }
         
         void DrawAndRepaint()

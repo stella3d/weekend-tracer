@@ -38,10 +38,8 @@ namespace RayTracingWeekend
             }
         }
         
-        public int canvasScale { get; set; }
         public CameraFrame camera { get; set; }
 
-        public bool clearOnDraw { get; set; }
         public int CompletedSampleCount { get; private set; }
         
         float lastBatchTime;
@@ -164,13 +162,6 @@ namespace RayTracingWeekend
 
         public void DrawToTexture()
         {
-            if (clearOnDraw)
-            {
-                CompletedSampleCount = 0;
-                var clearJob = new ClearAccumulatedJob<float4> { Buffer = PixelBuffer };
-                m_Handle = clearJob.Schedule(PixelBuffer.Length, 4096, m_Handle);
-            }
-            
             for (int i = 0; i < jobsPerBatch; i++)
             {
                 var rand = new Random();
@@ -207,13 +198,6 @@ namespace RayTracingWeekend
 
         public void DrawToTextureWithoutFocus()
         {
-            if (clearOnDraw)
-            {
-                CompletedSampleCount = 0;
-                var clearJob = new ClearAccumulatedJob<float4> { Buffer = PixelBuffer };
-                m_Handle = clearJob.Schedule(PixelBuffer.Length, 4096, m_Handle);
-            }
-
             for (int i = 0; i < jobsPerBatch; i++)
             {
                 var rand = new Random();

@@ -55,10 +55,17 @@ namespace RayTracingWeekend
             window.Show();
         }
 
+        void OnDisable()
+        {
+            Dispose();
+        }
+
+        /*
         ~WeekendWindow()
         {
             Dispose();
         }
+        */
 
         void OnEnable()
         {
@@ -104,6 +111,10 @@ namespace RayTracingWeekend
             m_ChapterEleven.Resize(size);
         }
 
+        const string k_ChapterFourText = "Try changing the color and/or Z position of the sphere on this one. " +
+                                         "Click the button again to re-draw after changes.";
+                                   
+
         const string k_LaterChaptersText = "From here on all chapters use a shared implementation, which varies " +
                                            "from the book in a few ways.\n1) It runs multiple serial, single-" +
                                            "threaded jobs at once.  Each one of these jobs does one sample of the " +
@@ -116,7 +127,7 @@ namespace RayTracingWeekend
         {
             // TODO make the disposing work properly
             Debug.Log("disposing all chapters....");
-            m_ChapterEleven.Dispose();
+            //m_ChapterEleven.Dispose();
             m_Disposed = true;
         }
 
@@ -138,6 +149,7 @@ namespace RayTracingWeekend
             DrawChapterBasic(m_ChaptersOneAndTwo, "1 & 2");
             DrawChapterBasic(m_ChapterThree, "3");
             EditorGUILayout.Space();
+            EditorGUILayout.HelpBox(k_ChapterFourText, MessageType.Info);
             DrawChapterFour();
             DrawChapterBasic(m_ChapterFive, "5.1");
             DrawChapterBasic(m_ChapterFiveTwo, "5.2");
