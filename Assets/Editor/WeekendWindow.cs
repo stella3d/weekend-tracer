@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
 using Unity.EditorCoroutines.Editor;
 using Unity.Jobs;
 using Unity.Mathematics;
@@ -9,6 +10,18 @@ namespace RayTracingWeekend
 {
     public class WeekendWindow : EditorWindow
     {
+        const string k_ChapterFourText = "Try changing the color and/or Z position of the sphere on this one. " +
+                                         "Click the button again to re-draw after changes.";
+                                   
+
+        const string k_LaterChaptersText = "From here on all chapters use a shared implementation, which varies " +
+                                           "from the book in a few ways.\n1) It runs multiple serial, single-" +
+                                           "threaded jobs at once.  Each one of these jobs does one sample of the " +
+                                           "whole image, and then they are combined.\n2) We use the RGBA32 texture " +
+                                           "format, which is 4 32-bit floats per pixel, as opposed to converting " +
+                                           "the results of our color calculation back to 8-bit RGB color.\n\n" +
+                                           "You can set how many total samples to do when you click each button below.";
+        
         static GUIStyle k_CompletedSamplesStyle; 
         static GUIStyle k_TotalSamplesStyle; 
         static GUILayoutOption k_LargeHeaderHeight;
@@ -27,10 +40,6 @@ namespace RayTracingWeekend
         BatchedTracer m_ChapterEleven;
         BatchedTracer m_ChapterTwelve;
 
-        // default position and color same as the book
-        float m_Chapter4ZPosition = -1f;
-        Color32 m_Chapter4Color = Color.red;
-        
         bool m_Disposed;
         Vector2 m_ScrollPosition;
 
@@ -41,13 +50,17 @@ namespace RayTracingWeekend
         string[] m_ScaleOptionLabels;
         string m_CanvasSizeLabel;
         
+        // default position and color same as the book
+        float m_Chapter4ZPosition = -1f;
+        Color32 m_Chapter4Color = Color.red;
+        
         // TODO - make it so these options can only be set to proper multiples
         int m_SamplesPerPixel = 64;
         int m_SingleSampleJobsPerBatch = 4;
         
-        float m_AbsorbRateSeven = 0.5f;
-        float m_PreviousAbsorbRateSeven = 0.5f;
-
+        EditorCoroutine m_Routine;
+        JobHandle m_DummyHandle;
+        
         [MenuItem("Window/Weekend Tracer/Book")]
         public static void ShowWindow()
         {
@@ -59,13 +72,6 @@ namespace RayTracingWeekend
         {
             Dispose();
         }
-
-        /*
-        ~WeekendWindow()
-        {
-            Dispose();
-        }
-        */
 
         void OnEnable()
         {
@@ -111,23 +117,21 @@ namespace RayTracingWeekend
             m_ChapterEleven.Resize(size);
         }
 
-        const string k_ChapterFourText = "Try changing the color and/or Z position of the sphere on this one. " +
-                                         "Click the button again to re-draw after changes.";
-                                   
-
-        const string k_LaterChaptersText = "From here on all chapters use a shared implementation, which varies " +
-                                           "from the book in a few ways.\n1) It runs multiple serial, single-" +
-                                           "threaded jobs at once.  Each one of these jobs does one sample of the " +
-                                           "whole image, and then they are combined.\n2) We use the RGBA32 texture " +
-                                           "format, which is 4 32-bit floats per pixel, as opposed to converting " +
-                                           "the results of our color calculation back to 8-bit RGB color.\n\n" +
-                                           "You can set how many total samples to do when you click each button below.";
-
         void Dispose()
         {
             // TODO make the disposing work properly
             Debug.Log("disposing all chapters....");
-            //m_ChapterEleven.Dispose();
+            m_ChaptersOneAndTwo.Dispose();
+            m_ChapterThree.Dispose();
+            m_ChapterFour.Dispose();
+            m_ChapterFive.Dispose();
+            m_ChapterFiveTwo.Dispose();
+            m_ChapterSix.Dispose();
+            m_ChapterSeven.Dispose();
+            m_ChapterEight.Dispose();
+            m_ChapterNine.Dispose();
+            m_ChapterTen.Dispose();
+            m_ChapterEleven.Dispose();
             m_Disposed = true;
         }
 
@@ -135,12 +139,8 @@ namespace RayTracingWeekend
         {
             if (m_Disposed)
                 return;
-            
-            if (EditorApplication.isCompiling)
-            {
-                //Dispose();
-            }
-
+            if (k_TotalSamplesStyle == null)
+                SetupStyles();
 
             DrawScaleOptions();
             
@@ -158,18 +158,24 @@ namespace RayTracingWeekend
             
             EditorGUILayout.HelpBox(k_LaterChaptersText, MessageType.Info);
             m_SamplesPerPixel = EditorGUILayout.IntField("Samples Per Pixel", m_SamplesPerPixel);
-            DrawChapterEightPro();
-            EditorGUILayout.Space();
-            DrawChapterNine();
-            EditorGUILayout.Space();
-            DrawChapterTen();
+            DrawLaterChapter(m_ChapterEight, "Eight");
+            DrawLaterChapter(m_ChapterNine, "Nine");
+            DrawLaterChapter(m_ChapterTen, "Ten");
+            DrawChapterWithFocusSupport(m_ChapterEleven, "Eleven");
             
             EditorGUILayout.EndScrollView();
         }
 
         void SetupStyles()
         {
-            k_CompletedSamplesStyle = new GUIStyle(EditorStyles.boldLabel) {fontSize = 18};
+            try
+            {
+                k_CompletedSamplesStyle = new GUIStyle(EditorStyles.boldLabel) {fontSize = 18};
+            }
+            catch (Exception e)
+            {
+                return;
+            }
             k_TotalSamplesStyle = new GUIStyle(EditorStyles.numberField)
             {
                 fontSize = 18, 
@@ -205,14 +211,6 @@ namespace RayTracingWeekend
             EditorGUILayout.EndHorizontal();
         }
 
-        void DrawGlobalOptions()
-        {
-            
-            
-            
-
-        }
-
         void DrawChapterFour()
         {
             m_Chapter4ZPosition = EditorGUILayout.Slider("Z Position", m_Chapter4ZPosition, -5f, -0.75f);
@@ -235,93 +233,24 @@ namespace RayTracingWeekend
         void DrawChapterSeven()
         {
             m_ChapterSeven.numberOfSamples = m_SamplesPerPixel;
-
-            m_AbsorbRateSeven = EditorGUILayout.Slider("Absorb Rate", m_AbsorbRateSeven, 0.05f, 0.95f);
-            m_ChapterSeven.absorbRate = m_AbsorbRateSeven;
-
-            if (!Mathf.Approximately(m_AbsorbRateSeven, m_PreviousAbsorbRateSeven))
-            {
-                var handle = m_ChapterSeven.Schedule();
-                handle.Complete();
-            }
-
-            m_PreviousAbsorbRateSeven = m_AbsorbRateSeven;
             DrawChapterBasic(m_ChapterSeven, "7");
         }
         
-        void DrawChapterEightPro()
+        void DrawChapterEight()
         {
-            EditorGUILayout.Space();
-            EditorGUILayout.LabelField("Sample Count", EditorStyles.boldLabel); 
-            EditorGUILayout.BeginHorizontal(k_LargeHeaderHeight, GUILayout.ExpandHeight(true));
-            
-            EditorGUILayout.LabelField("Completed: " + m_ChapterEight.CompletedSampleCount, k_CompletedSamplesStyle,
-                k_LargeHeaderHeight);
-            EditorGUILayout.EndHorizontal();
-            EditorGUILayout.Space();
-
-            if (GUILayout.Button($"Draw Chapter Eight Image"))
-            {
-                // TODO - better explanation for the batch coroutine
-                var routineEnumerator = m_ChapterEight.BatchCoroutine(m_SamplesPerPixel, Repaint);
-                m_ChapterEight.Routine = EditorCoroutineUtility.StartCoroutine(routineEnumerator, this);
-            }
-            
-            DrawTexture(m_ChapterEight.texture);
-            EditorGUILayout.Separator();
+            DrawLaterChapter(m_ChapterEight, "Eight");
         }
 
         void DrawChapterNine()
         {
-            if (EditorApplication.isCompiling && m_ChapterNine.texture != null)
-                m_ChapterNine.Dispose();
-
-            EditorGUILayout.Space();
             m_ChapterNine.camera = CameraFrame.Default;
-
-            EditorGUILayout.LabelField("Sample Count", EditorStyles.boldLabel); 
-            EditorGUILayout.BeginHorizontal(k_LargeHeaderHeight, GUILayout.ExpandHeight(true));
-            EditorGUILayout.LabelField("Completed: " + m_ChapterNine.CompletedSampleCount, 
-                k_CompletedSamplesStyle, k_LargeHeaderHeight);
-            EditorGUILayout.EndHorizontal();
-            EditorGUILayout.Space();
-
-            if (GUILayout.Button($"Draw Chapter Nine Image"))
-            {
-                var routineEnumerator = m_ChapterNine.BatchCoroutine(m_SamplesPerPixel, Repaint);
-                m_ChapterNine.Routine = EditorCoroutineUtility.StartCoroutine(routineEnumerator, this);
-            }
-            
-            DrawTexture(m_ChapterNine.texture);
-            EditorGUILayout.Separator();
+            DrawLaterChapter(m_ChapterNine, "Nine");
         }
         
         void DrawChapterTen()
         {
-            if (EditorApplication.isCompiling && m_ChapterTen.texture != null)
-                m_ChapterTen.Dispose();
-
-            EditorGUILayout.Space();
-            EditorGUILayout.LabelField("Sample Count", EditorStyles.boldLabel); 
-            EditorGUILayout.BeginHorizontal(k_LargeHeaderHeight, GUILayout.ExpandHeight(true));
-            EditorGUILayout.LabelField("Completed: " + m_ChapterTen.CompletedSampleCount, 
-                k_CompletedSamplesStyle, k_LargeHeaderHeight);
-            EditorGUILayout.EndHorizontal();
-            EditorGUILayout.Space();
-
-            if (GUILayout.Button($"Draw Chapter Ten Image"))
-            {
-                var routineEnumerator = m_ChapterTen.BatchCoroutineNoFocus(m_SamplesPerPixel, Repaint);
-                m_ChapterTen.Routine = EditorCoroutineUtility.StartCoroutine(routineEnumerator, this);
-            }
-            
-            DrawTexture(m_ChapterTen.texture);
-            EditorGUILayout.Separator();
+            DrawLaterChapter(m_ChapterTen, "Ten");
         }
-
-        EditorCoroutine m_Routine;
-        
-        float lastFovChangeTime;
         
         static void DrawChapterBasic<T>(Chapter<T> chapter, string chapterNumber) where T: struct
         {
@@ -331,8 +260,44 @@ namespace RayTracingWeekend
             DrawTexture(chapter.texture);
             EditorGUILayout.Separator();
         }
+        
+        void DrawLaterChapter(BatchedTracer chapter, string chapterNumber)
+        {
+            DrawLaterChapter(chapter, chapterNumber, (tracer) =>
+            {
+                var routineEnumerator = tracer.BatchCoroutineNoFocus(m_SamplesPerPixel, Repaint);
+                tracer.Routine = EditorCoroutineUtility.StartCoroutine(routineEnumerator, this);
+            });
+        }
+        
+        void DrawChapterWithFocusSupport(BatchedTracer chapter, string chapterNumber)
+        {
+            DrawLaterChapter(chapter, chapterNumber, (tracer) =>
+            {
+                var routineEnumerator = tracer.BatchCoroutine(m_SamplesPerPixel, Repaint);
+                tracer.Routine = EditorCoroutineUtility.StartCoroutine(routineEnumerator, this);
+            });
+        }
+        
+        void DrawLaterChapter(BatchedTracer chapter, string chapterNumber, Action<BatchedTracer> onClick)
+        {
+            EditorGUILayout.Space();
+            EditorGUILayout.LabelField("Sample Count", EditorStyles.boldLabel); 
+            EditorGUILayout.BeginHorizontal(k_LargeHeaderHeight, GUILayout.ExpandHeight(true));
+            EditorGUILayout.LabelField("Completed: " + chapter.CompletedSampleCount, 
+                k_CompletedSamplesStyle, k_LargeHeaderHeight);
+            EditorGUILayout.EndHorizontal();
+            EditorGUILayout.Space();
 
-        JobHandle m_DummyHandle;
+            if (GUILayout.Button($"Draw Chapter {chapterNumber} Image"))
+            {
+                onClick(chapter);
+            }
+
+            DrawTexture(chapter.texture);
+            EditorGUILayout.Separator();
+            EditorGUILayout.Space();
+        }
 
         // schedule a job, immediately complete it and update the texture
         static void CompleteAndDraw<T>(Chapter<T> chapter) where T: struct

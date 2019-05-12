@@ -11,7 +11,7 @@ namespace RayTracingWeekend
         public ChapterSeven(int width, int height) : base(width, height) { }
         
         public int numberOfSamples;
-        public float absorbRate;
+        public float absorbRate = 0.5f;
         
         [BurstCompile]
         public struct Job : IJob
