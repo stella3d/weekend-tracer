@@ -72,19 +72,20 @@ namespace RayTracingWeekend
 
         void SetupChapters()
         {
-            m_ChaptersOneAndTwo = new ChaptersOneAndTwo();
-            m_ChapterThree = new ChapterThree();
-            m_ChapterFour = new ChapterFour();
-            m_ChapterFive = new ChapterFive();
-            m_ChapterFiveTwo = new ChapterFiveTwo();
-            m_ChapterSix = new ChapterSix();
-            m_ChapterSeven = new ChapterSeven();
+            var size = Constants.DefaultImageSize * m_SelectedScaleOption;
+            m_ChaptersOneAndTwo = new ChaptersOneAndTwo(size.x, size.y);
+            m_ChapterThree = new ChapterThree(size.x, size.y);
+            m_ChapterFour = new ChapterFour(size.x, size.y);
+            m_ChapterFive = new ChapterFive(size.x, size.y);
+            m_ChapterFiveTwo = new ChapterFiveTwo(size.x, size.y);
+            m_ChapterSix = new ChapterSix(size.x, size.y);
+            m_ChapterSeven = new ChapterSeven(size.x, size.y);
             
             // from chapter 8 on, the same implementation is re-used
-            m_ChapterEight = new BatchedTracer(ExampleSphereSets.ChapterEight(), CameraFrame.Default);
-            m_ChapterNine = new BatchedTracer(ExampleSphereSets.FiveWithDielectric(), CameraFrame.Default);
-            m_ChapterTen = new BatchedTracer(ExampleSphereSets.FiveWithDielectric(), CameraFrame.ChapterTen);
-            m_ChapterEleven = new BatchedTracer(ExampleSphereSets.FiveWithDielectric(), CameraFrame.ChapterEleven);
+            m_ChapterEight = new BatchedTracer(ExampleSphereSets.ChapterEight(), CameraFrame.Default, size.x, size.y);
+            m_ChapterNine = new BatchedTracer(ExampleSphereSets.FiveWithDielectric(), CameraFrame.Default, size.x, size.y);
+            m_ChapterTen = new BatchedTracer(ExampleSphereSets.FiveWithDielectric(), CameraFrame.ChapterTen, size.x, size.y);
+            m_ChapterEleven = new BatchedTracer(ExampleSphereSets.FiveWithDielectric(), CameraFrame.ChapterEleven, size.x, size.y);
         }
         
         void ScaleChapters()
@@ -97,14 +98,10 @@ namespace RayTracingWeekend
             m_ChapterFiveTwo.Resize(size);
             m_ChapterSix.Resize(size);
             m_ChapterSeven.Resize(size);
-
-            /*
-            // from chapter 8 on, the same implementation is re-used
-            m_ChapterEight = new BatchedTracer(ExampleSphereSets.ChapterEight(), CameraFrame.Default);
-            m_ChapterNine = new BatchedTracer(ExampleSphereSets.FiveWithDielectric(), CameraFrame.Default);
-            m_ChapterTen = new BatchedTracer(ExampleSphereSets.FiveWithDielectric(), CameraFrame.ChapterTen);
-            m_ChapterEleven = new BatchedTracer(ExampleSphereSets.FiveWithDielectric(), CameraFrame.ChapterEleven);
-            */
+            m_ChapterEight.Resize(size);
+            m_ChapterNine.Resize(size);
+            m_ChapterTen.Resize(size);
+            m_ChapterEleven.Resize(size);
         }
 
         void Dispose()
@@ -127,8 +124,8 @@ namespace RayTracingWeekend
 
             m_ScrollPosition = EditorGUILayout.BeginScrollView(m_ScrollPosition);
 
-            DrawGlobalOptions();
-
+            DrawScaleOptions();
+            
             DrawChapterBasic(m_ChaptersOneAndTwo, "1 & 2");
             DrawChapterBasic(m_ChapterThree, "3");
             EditorGUILayout.Space();
@@ -137,7 +134,10 @@ namespace RayTracingWeekend
             DrawChapterBasic(m_ChapterFiveTwo, "5.2");
             DrawChapterSix();
             DrawChapterSeven();
+            
+            m_SamplesPerPixel = EditorGUILayout.IntField("Samples Per Pixel (applies from here on)", m_SamplesPerPixel);
             DrawChapterEightPro();
+            EditorGUILayout.Space();
             DrawChapterNine();
             EditorGUILayout.Space();
             DrawChapterTen();
@@ -158,12 +158,9 @@ namespace RayTracingWeekend
             k_LargeHeaderHeight = GUILayout.Height(36);
         }
 
-        void DrawGlobalOptions()
+        void DrawScaleOptions()
         {
             var maxWidth = GUILayout.MaxWidth(200);
-            
-            m_SamplesPerPixel = EditorGUILayout.IntField("Samples Per Pixel", m_SamplesPerPixel);
-            
             EditorGUILayout.BeginHorizontal();
             
             var label = new GUIContent("Canvas Scale", "The number to multiply the book's default 200x100 canvas by");
@@ -184,6 +181,14 @@ namespace RayTracingWeekend
             EditorGUILayout.LabelField(m_CanvasSizeLabel, GUILayout.MinWidth(180));
             
             EditorGUILayout.EndHorizontal();
+        }
+
+        void DrawGlobalOptions()
+        {
+            
+            
+            
+
         }
 
         void DrawChapterFour()

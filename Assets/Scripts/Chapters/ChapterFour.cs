@@ -7,6 +7,8 @@ namespace RayTracingWeekend
 {
     public class ChapterFour : Chapter<Color24>
     {
+        public ChapterFour(int width, int height) : base(width, height) { }
+        
         public float spherePositionZ = -1f;
         public float3 sphereColor = new float3(1f, 0f, 0f);
         
@@ -65,12 +67,12 @@ namespace RayTracingWeekend
             {
                 sphereColor = sphereColor,
                 spherePosition = new float3(0f, 0f, spherePositionZ),
-                size = Constants.DefaultImageSize,
-                Pixels = pixelBuffer
+                size = texture.GetSize(),
+                Pixels = PixelBuffer
             };
 
-            jobHandle = job.Schedule(dependency);
-            return jobHandle;
+            JobHandle = job.Schedule(dependency);
+            return JobHandle;
         }
     }
 }

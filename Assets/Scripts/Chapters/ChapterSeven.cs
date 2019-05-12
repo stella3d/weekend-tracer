@@ -8,6 +8,8 @@ namespace RayTracingWeekend
 {
     public class ChapterSeven : Chapter<Color24>
     {
+        public ChapterSeven(int width, int height) : base(width, height) { }
+        
         public int numberOfSamples;
         public float absorbRate;
         
@@ -84,11 +86,11 @@ namespace RayTracingWeekend
                 random = rand,
                 size = texture.GetSize(),
                 World = m_Spheres,
-                Pixels = pixelBuffer
+                Pixels = PixelBuffer
             };
             
-            jobHandle = job.Schedule(dependency);
-            return jobHandle;
+            JobHandle = job.Schedule(dependency);
+            return JobHandle;
         }
         
         public override void Dispose()

@@ -24,7 +24,7 @@ namespace RayTracingWeekend
             EnsureRaySceneManager();
             
             // TODO - make this constructor work on just texture size instead of scaling
-            m_RayTracer = new BatchedTracer(m_SceneManager.Spheres, CameraFrame.Default, 2);
+            m_RayTracer = new BatchedTracer(m_SceneManager.Spheres, CameraFrame.Default, 400, 200);
             m_TracerRenderTexture = m_RayTracer.texture;
             m_SceneManager = FindObjectOfType<RaytracingSceneManager>();
             m_SceneManager.UpdateWorld();

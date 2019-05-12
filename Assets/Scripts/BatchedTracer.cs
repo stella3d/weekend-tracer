@@ -39,7 +39,6 @@ namespace RayTracingWeekend
         }
         
         public int canvasScale { get; set; }
-        public float fieldOfView { get; set; }
         public CameraFrame camera { get; set; }
 
         public bool clearOnDraw { get; set; }
@@ -50,7 +49,6 @@ namespace RayTracingWeekend
         // TODO - move this out of the tracer class
         public EditorCoroutine Routine { get; set; }
         
-        public NativeArray<float4> m_TextureBuffer;
         public NativeArray<float3>[] m_BatchBuffers;
 
         NativeArray<JobHandle> m_BatchHandles;
@@ -60,11 +58,9 @@ namespace RayTracingWeekend
         public JobHandle m_Handle;
         JobHandle m_DummyHandle;
         
-        int m_PixelCount;
-
-        public BatchedTracer(HitableArray<Sphere> spheres, CameraFrame camera, int canvasScale = 4)
+        public BatchedTracer(HitableArray<Sphere> spheres, CameraFrame camera, int width, int height)
+            : base(width, height, TextureFormat.RGBA32)
         {
-            this.canvasScale = canvasScale;
             this.camera = camera;
             Spheres = spheres;
             Setup();
@@ -77,7 +73,6 @@ namespace RayTracingWeekend
 
         internal void AllocateSampleJobBuffers(int pixelCount, Allocator allocator = Allocator.Persistent)
         {
-            m_PixelCount = pixelCount;
             m_BatchHandles.DisposeIfCreated();
             m_BatchHandles = new NativeArray<JobHandle>(jobsPerBatch, allocator);
 
@@ -94,15 +89,14 @@ namespace RayTracingWeekend
 
         public override void Setup()
         {
-            //Dispose();
             m_DummyHandle = new JobHandle();
             m_DummyHandle.Complete();
-            
-            ScaleTexture(canvasScale, TextureFormat.RGBAFloat);
+
+            TextureFormat = TextureFormat.RGBAFloat;
             var length = texture.height * texture.width;
+            PixelBuffer = texture.GetRawTextureData<float4>();
 
             AllocateSampleJobBuffers(length);
-            m_TextureBuffer = new NativeArray<float4>(length, Allocator.Persistent);
             CompletedSampleCount = 0;
         }
         
@@ -173,8 +167,8 @@ namespace RayTracingWeekend
             if (clearOnDraw)
             {
                 CompletedSampleCount = 0;
-                var clearJob = new ClearAccumulatedJob<float4> { Buffer = m_TextureBuffer };
-                m_Handle = clearJob.Schedule(m_TextureBuffer.Length, 4096, m_Handle);
+                var clearJob = new ClearAccumulatedJob<float4> { Buffer = PixelBuffer };
+                m_Handle = clearJob.Schedule(PixelBuffer.Length, 4096, m_Handle);
             }
             
             for (int i = 0; i < jobsPerBatch; i++)
@@ -185,7 +179,7 @@ namespace RayTracingWeekend
                 {
                     camera = camera,
                     random = rand,
-                    size = Constants.DefaultImageSize * canvasScale,
+                    size = texture.GetSize(),
                     World = Spheres,
                     Pixels = m_BatchBuffers[i],
                 };
@@ -193,7 +187,7 @@ namespace RayTracingWeekend
                 m_BatchHandles[i] = job.Schedule(m_Handle);
             }
 
-            var combineJob = new CombineJobFour(m_BatchBuffers, m_TextureBuffer, CompletedSampleCount);
+            var combineJob = new CombineJobFour(m_BatchBuffers, PixelBuffer, CompletedSampleCount);
 
             var batchHandle = JobHandle.CombineDependencies(m_BatchHandles);
             
@@ -201,7 +195,7 @@ namespace RayTracingWeekend
             m_Handle.Complete();
 
             CompletedSampleCount += jobsPerBatch;
-            texture.LoadAndApply(m_TextureBuffer, false);
+            texture.LoadAndApply(PixelBuffer, false);
         }
 
         public override JobHandle Schedule(JobHandle dependency = default)
@@ -214,8 +208,8 @@ namespace RayTracingWeekend
             if (clearOnDraw)
             {
                 CompletedSampleCount = 0;
-                var clearJob = new ClearAccumulatedJob<float4> { Buffer = m_TextureBuffer };
-                m_Handle = clearJob.Schedule(m_TextureBuffer.Length, 4096, m_Handle);
+                var clearJob = new ClearAccumulatedJob<float4> { Buffer = PixelBuffer };
+                m_Handle = clearJob.Schedule(PixelBuffer.Length, 4096, m_Handle);
             }
 
             for (int i = 0; i < jobsPerBatch; i++)
@@ -226,7 +220,7 @@ namespace RayTracingWeekend
                 {
                     camera = camera,
                     random = rand,
-                    size = Constants.DefaultImageSize * canvasScale,
+                    size = texture.GetSize(),
                     World = Spheres,
                     Pixels = m_BatchBuffers[i]
                 };
@@ -235,17 +229,15 @@ namespace RayTracingWeekend
             }
 
             var batchHandle = JobHandle.CombineDependencies(m_BatchHandles);
-            m_Handle = Combine.ScheduleJob(m_BatchBuffers, m_TextureBuffer, CompletedSampleCount, batchHandle);
+            m_Handle = Combine.ScheduleJob(m_BatchBuffers, PixelBuffer, CompletedSampleCount, batchHandle);
             
             // TODO - make this async
             m_Handle.Complete();
 
             CompletedSampleCount += jobsPerBatch;
-            texture.LoadAndApply(m_TextureBuffer, false);
+            texture.LoadAndApply(PixelBuffer, false);
         }
 
-
-        
         // TODO - refactor this to not wait synchronously on the jobs
         public IEnumerator BatchCoroutine(int count, Action onBatchComplete, float cycleTime = 0.64f)
         {
@@ -283,16 +275,11 @@ namespace RayTracingWeekend
                 EditorCoroutineUtility.StopCoroutine(Routine);
         }
 
-        public void Dispose()
+        public override void Dispose()
         {
             Spheres.Dispose();
             foreach (var b in m_BatchBuffers)
-            {
-                if(b.IsCreated)
-                    b.Dispose();
-            }
-            if(m_TextureBuffer.IsCreated)
-                m_TextureBuffer.Dispose();
+                b.DisposeIfCreated();
             if(m_BatchHandles.IsCreated)
                 m_BatchHandles.Dispose();
         }

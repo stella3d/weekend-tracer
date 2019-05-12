@@ -7,6 +7,8 @@ namespace RayTracingWeekend
 {
     public class ChapterSix : Chapter<Color24>
     {
+        public ChapterSix(int width, int height) : base(width, height) { }
+        
         public int numberOfSamples;
         
         [BurstCompile]
@@ -78,13 +80,13 @@ namespace RayTracingWeekend
                 camera = CameraFrame.Default,
                 numberOfSamples = numberOfSamples,
                 random = rand,
-                size = Constants.DefaultImageSize,
+                size = texture.GetSize(),
                 World = m_Spheres,
-                Pixels = pixelBuffer
+                Pixels = PixelBuffer
             };
             
-            jobHandle = job.Schedule(dependency);
-            return jobHandle;
+            JobHandle = job.Schedule(dependency);
+            return JobHandle;
         }
         
         public override void Dispose()

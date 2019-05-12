@@ -7,6 +7,8 @@ namespace RayTracingWeekend
 {
     public class ChapterFiveTwo : Chapter<Color24>
     {
+        public ChapterFiveTwo(int width, int height) : base(width, height) { }
+
         [BurstCompile]
         public struct SecondImageJob : IJob
         {
@@ -74,13 +76,13 @@ namespace RayTracingWeekend
         {
             var job = new SecondImageJob()
             {
-                size = Constants.DefaultImageSize,
+                size = texture.GetSize(),
                 World = m_Spheres,
-                Pixels = pixelBuffer
+                Pixels = PixelBuffer
             };
             
-            jobHandle = job.Schedule(dependency);
-            return jobHandle;
+            JobHandle = job.Schedule(dependency);
+            return JobHandle;
         }
     }
 }
