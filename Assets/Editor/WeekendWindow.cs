@@ -104,6 +104,14 @@ namespace RayTracingWeekend
             m_ChapterEleven.Resize(size);
         }
 
+        const string k_LaterChaptersText = "From here on all chapters use a shared implementation, which varies " +
+                                           "from the book in a few ways.\n1) It runs multiple serial, single-" +
+                                           "threaded jobs at once.  Each one of these jobs does one sample of the " +
+                                           "whole image, and then they are combined.\n2) We use the RGBA32 texture " +
+                                           "format, which is 4 32-bit floats per pixel, as opposed to converting " +
+                                           "the results of our color calculation back to 8-bit RGB color.\n\n" +
+                                           "You can set how many total samples to do when you click each button below.";
+
         void Dispose()
         {
             // TODO make the disposing work properly
@@ -119,12 +127,13 @@ namespace RayTracingWeekend
             
             if (EditorApplication.isCompiling)
             {
-                Dispose();
+                //Dispose();
             }
 
-            m_ScrollPosition = EditorGUILayout.BeginScrollView(m_ScrollPosition);
 
             DrawScaleOptions();
+            
+            m_ScrollPosition = EditorGUILayout.BeginScrollView(m_ScrollPosition);
             
             DrawChapterBasic(m_ChaptersOneAndTwo, "1 & 2");
             DrawChapterBasic(m_ChapterThree, "3");
@@ -135,7 +144,8 @@ namespace RayTracingWeekend
             DrawChapterSix();
             DrawChapterSeven();
             
-            m_SamplesPerPixel = EditorGUILayout.IntField("Samples Per Pixel (applies from here on)", m_SamplesPerPixel);
+            EditorGUILayout.HelpBox(k_LaterChaptersText, MessageType.Info);
+            m_SamplesPerPixel = EditorGUILayout.IntField("Samples Per Pixel", m_SamplesPerPixel);
             DrawChapterEightPro();
             EditorGUILayout.Space();
             DrawChapterNine();
