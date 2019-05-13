@@ -20,7 +20,19 @@ namespace RayTracingWeekend
                 }
             };
         }
-        
+
+        public static HitableArray<Sphere> ChapterSixAndSeven(Allocator allocator = Allocator.Persistent)
+        {
+            return new HitableArray<Sphere>(2, allocator)
+            {
+                Objects =
+                {
+                    [0] = new Sphere(new float3(0f, 0f, -1f), 0.5f),
+                    [1] = new Sphere(new float3(0f, -100.5f, -1f), 100f)
+                }
+            };
+        }
+
         public static HitableArray<Sphere> ChapterEight(Allocator allocator = Allocator.Persistent)
         {
             return new HitableArray<Sphere>(4, allocator)
@@ -35,24 +47,6 @@ namespace RayTracingWeekend
                                      new Material(MaterialType.Metal, new float3(0.8f, 0.6f, 0.2f), 0.3f)),
                     [3] = new Sphere(new float3(-1f, 0f, -1f), 0.5f,
                                      new Material(MaterialType.Metal, new float3(0.8f, 0.8f, 0.8f), 0.1f)),
-                }
-            };
-        }
-        
-        public static HitableArray<Sphere> FourWithDielectric(Allocator allocator = Allocator.Persistent)
-        {
-            return new HitableArray<Sphere>(4, allocator)
-            {
-                Objects =
-                {
-                    [0] = new Sphere(new float3(0f, 0f, -1f), 0.5f, 
-                        new Material(MaterialType.Lambertian, new float3(0.1f, 0.2f, 0.5f))),
-                    [1] = new Sphere(new float3(0f, -100.5f, -1f), 100f,
-                        new Material(MaterialType.Lambertian, new float3(0.8f, 0.8f, 0.0f))),
-                    [2] = new Sphere(new float3(1f, 0f, -1f), 0.5f,
-                        new Material(MaterialType.Metal, new float3(0.8f, 0.6f, 0.2f))),
-                    [3] = new Sphere(new float3(-1f, 0f, -1f), 0.5f,
-                        new Material(MaterialType.Dielectric, float3.zero, 0f, 1.5f)),
                 }
             };
         }

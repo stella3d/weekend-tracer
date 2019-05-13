@@ -7,9 +7,12 @@ namespace RayTracingWeekend
 {
     public class ChapterSix : Chapter<Color24>
     {
+        public int numberOfSamples;
+
+        HitableArray<Sphere> m_Spheres = ExampleSphereSets.ChapterSixAndSeven();
+        
         public ChapterSix(int width, int height) : base(width, height) { }
         
-        public int numberOfSamples;
         
         [BurstCompile]
         public struct Job : IJob
@@ -59,16 +62,6 @@ namespace RayTracingWeekend
                 return Utils.BackgroundColor(ref r);
             }
         }
-
-        // TODO - move somewhere common ?
-        HitableArray<Sphere> m_Spheres = new HitableArray<Sphere>(2)
-        {
-            Objects =
-            {
-                [0] = new Sphere(new float3(0f, 0f, -1f), 0.5f),
-                [1] = new Sphere(new float3(0f, -100.5f, -1f), 100f)
-            }
-        };
 
         public override JobHandle Schedule(JobHandle dependency = default)
         {

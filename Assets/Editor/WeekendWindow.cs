@@ -184,6 +184,7 @@ namespace RayTracingWeekend
 
         void SetupStyles()
         {
+            // sometimes EditorStyles can get a nullref if you call it outside onGui
             try
             {
                 k_CompletedSamplesStyle = new GUIStyle(EditorStyles.boldLabel) {fontSize = 18};
@@ -194,6 +195,7 @@ namespace RayTracingWeekend
                 return;
             }
 #pragma warning restore 0168
+            
             k_TotalSamplesStyle = new GUIStyle(EditorStyles.numberField)
             {
                 fontSize = 18, 

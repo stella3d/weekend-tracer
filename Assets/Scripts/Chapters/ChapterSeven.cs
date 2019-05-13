@@ -13,6 +13,8 @@ namespace RayTracingWeekend
         public int numberOfSamples;
         public float absorbRate = 0.5f;
         
+        HitableArray<Sphere> m_Spheres = ExampleSphereSets.ChapterSixAndSeven();
+        
         [BurstCompile]
         public struct Job : IJob
         {
@@ -68,9 +70,6 @@ namespace RayTracingWeekend
                 return Utils.BackgroundColor(ref r);
             }
         }
-
-        // TODO - factor into base class ? ALSO RESET TO ACTUAL BOOK SPHERE
-        HitableArray<Sphere> m_Spheres = ExampleSphereSets.FourVaryingSize();
 
         public override JobHandle Schedule(JobHandle dependency = default)
         {

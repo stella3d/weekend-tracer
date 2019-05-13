@@ -172,10 +172,10 @@ namespace RayTracingWeekend
 
         public override JobHandle Schedule(JobHandle dependency = default)
         {
-            // TODO - this?
-            throw new NotImplementedException();
+            return ScheduleBatch(ScheduleFocusJob);
         }
 
+        // schedule a job without support for defocus blur.  chapters 8, 9, 10
         JobHandle ScheduleNoFocusJob(int batchIndex, JobHandle dependency)
         {
             var rand = new Random();
@@ -192,6 +192,7 @@ namespace RayTracingWeekend
             return job.Schedule(dependency);
         }
         
+        // schedule a job with support for defocus blur.  chapters 11 & 12
         JobHandle ScheduleFocusJob(int batchIndex, JobHandle dependency)
         {
             var rand = new Random();
@@ -208,10 +209,20 @@ namespace RayTracingWeekend
             return job.Schedule(dependency);
         }
 
+        public bool ClearOnDraw;
+
         public JobHandle ScheduleBatch(Func<int, JobHandle, JobHandle> scheduleSingle)
         {
+            if (ClearOnDraw)        // used for interactive mode - clear buffer every re-draw if interactive
+            {
+                var clearJob = new ClearAccumulatedJob<float4> { Buffer = PixelBuffer };
+                m_Handle = clearJob.Schedule(PixelBuffer.Length, 4096, m_Handle);
+                CompletedSampleCount = 0;
+            }
+
             for (int i = 0; i < m_JobsPerBatch; i++)
             {
+                // schedule a single sample job for the whole image
                 m_BatchHandles[i] = scheduleSingle(i, m_Handle);
             }
             
