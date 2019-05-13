@@ -125,7 +125,12 @@ namespace RayTracingWeekend
             m_ChapterNine.Resize(size);
             m_ChapterTen.Resize(size);
             m_ChapterEleven.Resize(size);
-            m_ChapterTwelve.Resize(size);
+            
+            m_ChapterTwelve.Dispose();
+            var tempRng = new Unity.Mathematics.Random();
+            tempRng.InitState((uint)UnityEngine.Random.Range(1, 1000));
+            m_ChapterTwelve = new BatchedTracer(ExampleSphereSets.RandomScene(500, tempRng.NextUInt()), 
+                CameraFrame.ChapterTwelve, size.x, size.y);
         }
 
         void Dispose()
@@ -183,10 +188,12 @@ namespace RayTracingWeekend
             {
                 k_CompletedSamplesStyle = new GUIStyle(EditorStyles.boldLabel) {fontSize = 18};
             }
+#pragma warning disable 0168
             catch (Exception e)
             {
                 return;
             }
+#pragma warning restore 0168
             k_TotalSamplesStyle = new GUIStyle(EditorStyles.numberField)
             {
                 fontSize = 18, 
