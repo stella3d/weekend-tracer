@@ -16,12 +16,16 @@ All of these were helpful to me in learning.
 
 `Window/Weekend Tracer/Book`
 
-Chapter-by-chapter implementations, with a button to draw them.
+Open this window to find chapter-by-chapter implementations of the book, with a button to draw each of them.
 
 Chapters 1-7 are done as a straight translation of the book, and you can find code for them under `Assets/Scripts/Chapters`.  
-Each of these chapters has its own implementation in its own file.  
+Each of these chapters has its own implementation in its own file. 
 
 Chapters 8 until the end of the book re-use the same implementation, found in `Assets/Scripts/BatchedTracer.cs`.
+
+The code that does the actual path tracing will always be found in the job struct's `Execute()` function. 
+
+Code around that is mostly about presenting it in the UI and handling options.
 
 
 ### Interactive Window
