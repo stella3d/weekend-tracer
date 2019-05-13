@@ -1,4 +1,6 @@
-﻿using UnityEditor;
+﻿using System.Globalization;
+using UnityEditor;
+using UnityEditor.SceneManagement;
 using UnityEngine;
 
 namespace RayTracingWeekend
@@ -21,6 +23,12 @@ namespace RayTracingWeekend
             m_SceneManager = FindObjectOfType<RaytracingSceneManager>();
             m_SceneManager.UpdateWorld();
             m_SceneManager.onSceneChanged += OnSceneChange;
+
+            if (FindObjectOfType<RaytracingSceneManager>() == null)
+                EditorSceneManager.LoadScene("ChapterEight");
+            
+            m_SceneManager.UpdateWorld();
+            OnSceneChange();
         }
 
         void OnDisable()
@@ -28,6 +36,10 @@ namespace RayTracingWeekend
             m_SceneManager.onSceneChanged -= OnSceneChange;
         }
 
+        const string k_HintBoxText = "This camera will move with the main Unity camera, but always look at the " +
+                                     "center sphere, so it won't show exactly what is in the Game View.\n" + 
+                                     "Load the ChapterEight scene and move the camera to see something.";
+        
         public void OnGUI()
         {
             if (m_SceneManager == null)
@@ -40,13 +52,12 @@ namespace RayTracingWeekend
             if(m_TracerRenderTexture == null)
                 m_TracerRenderTexture = m_RayTracer.texture;
 
-            if (GUILayout.Button("update world"))
-            {
-                m_SceneManager.UpdateWorld();
-                OnSceneChange();
-            }
+            EditorGUILayout.HelpBox(k_HintBoxText, MessageType.Info);
 
             var tex = m_TracerRenderTexture;
+            if (tex == null) 
+                return;
+            
             var rect = GUILayoutUtility.GetRect(tex.width, tex.height);
             EditorGUI.DrawPreviewTexture(rect, m_TracerRenderTexture, null, ScaleMode.ScaleToFit);
         }
@@ -76,6 +87,8 @@ namespace RayTracingWeekend
         {
             var window = GetWindow<InteractiveTracerWindow>();
             window.ShowAuxWindow();
+
+            
         }
     }
 }
