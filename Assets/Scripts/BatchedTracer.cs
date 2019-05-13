@@ -45,9 +45,6 @@ namespace RayTracingWeekend
 
         public int CompletedSampleCount { get; private set; }
         
-        float lastBatchTime;
-        
-        // TODO - move this out of the tracer class
         public EditorCoroutine Routine { get; set; }
         
         public NativeArray<float3>[] m_BatchBuffers;
@@ -58,6 +55,8 @@ namespace RayTracingWeekend
         
         public JobHandle m_Handle;
         JobHandle m_DummyHandle;
+
+        float lastBatchTime;
         
         public BatchedTracer(HitableArray<Sphere> spheres, CameraFrame camera, int width, int height)
             : base(width, height, TextureFormat.RGBAFloat)
@@ -101,8 +100,9 @@ namespace RayTracingWeekend
             CompletedSampleCount = 0;
         }
         
+        // trace rays with support for defocus blur.  chapters 11 & 12
         [BurstCompile]
-        public struct SerialJobWithFocus : IJob
+        public struct SampleJobWithFocus : IJob
         {
             public int2 size;
             public Random random;
@@ -133,9 +133,9 @@ namespace RayTracingWeekend
             }
         }
 
-        // TODO - better names
+        // trace rays without support for defocus blur.  chapters 8,9, & 10
         [BurstCompile]
-        public struct SerialJob : IJob
+        public struct SampleJobWithoutDefocus : IJob
         {
             public int2 size;
             public Random random;
@@ -180,7 +180,7 @@ namespace RayTracingWeekend
         {
             var rand = new Random();
             rand.InitState((uint)batchIndex + (uint)CompletedSampleCount + 100);
-            var job = new SerialJob()
+            var job = new SampleJobWithoutDefocus()
             {
                 camera = camera,
                 random = rand,
@@ -197,7 +197,7 @@ namespace RayTracingWeekend
         {
             var rand = new Random();
             rand.InitState((uint)batchIndex + (uint)CompletedSampleCount + 100);
-            var job = new SerialJobWithFocus()
+            var job = new SampleJobWithFocus()
             {
                 camera = camera,
                 random = rand,
