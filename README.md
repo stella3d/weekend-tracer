@@ -22,6 +22,7 @@ Chapters 1-7 are done as a straight translation of the book, and you can find co
 Each of these chapters has its own implementation in its own file. 
 
 Chapters 8 until the end of the book re-use the same implementation, found in `Assets/Scripts/BatchedTracer.cs`.
+This implementation launches multiples jobs at once and combines them in a batch.
 
 The code that does the actual path tracing will always be found in the job struct's `Execute()` function. 
 
