@@ -14,7 +14,7 @@ All of these were helpful to me in learning.
 
 ### Book Window
 
-`Window/Weekend Tracer/Book`
+Menu: `Window/Weekend Tracer/Book`
 
 Open this window to find chapter-by-chapter implementations of the book, with a button to draw each of them.
 
@@ -30,7 +30,7 @@ Code around that is mostly about presenting it in the UI and handling options.
 
 
 ### Interactive Window
-`Window/Weekend Tracer/Interactive`
+Menu: `Window/Weekend Tracer/Interactive`
 
 _EXPERIMENTAL, NOT IN THE BOOK_
 
