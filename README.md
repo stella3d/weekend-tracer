@@ -36,3 +36,8 @@ _EXPERIMENTAL, NOT IN THE BOOK_
 Try to render a basic Unity scene of just spheres via the raytracing camera, interactively.  
 Try opening the scene `ChapterEight` if using this window.
 
+
+
+### Miscellaneous
+
+I did a version that parallelized on a per-pixel basis using `IJobParallelFor`, but it had a bug i didn't solve, so i scrapped it.
