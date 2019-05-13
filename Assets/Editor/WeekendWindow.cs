@@ -10,6 +10,10 @@ namespace RayTracingWeekend
 {
     public class WeekendWindow : EditorWindow
     {
+        const string k_IntroText = "Each chapter in the book has its own Texture and button to draw the result. " +
+                                   "Scroll down to move forward in the book.\n You can scale the texture / resolution " +
+                                   "by adjusting the scale option below";
+        
         const string k_ChapterFourText = "Try changing the color and/or Z position of the sphere on this one. " +
                                          "Click the button again to re-draw after changes.";
                                    
@@ -21,6 +25,8 @@ namespace RayTracingWeekend
                                            "format, which is 4 32-bit floats per pixel, as opposed to converting " +
                                            "the results of our color calculation back to 8-bit RGB color.\n\n" +
                                            "You can set how many total samples to do when you click each button below.";
+        
+        static readonly GUIContent k_JobCountContent = new GUIContent("jobs / batch", "how many jobs to run in parallel");
         
         static GUIStyle k_CompletedSamplesStyle; 
         static GUIStyle k_TotalSamplesStyle; 
@@ -55,7 +61,7 @@ namespace RayTracingWeekend
         Color32 m_Chapter4Color = Color.red;
         
         int m_SamplesPerPixel = 64;
-        int m_JobCount = 6;
+        int m_JobCount = math.min(6, Environment.ProcessorCount);
         
         EditorCoroutine m_Routine;
         JobHandle m_DummyHandle;
@@ -81,7 +87,7 @@ namespace RayTracingWeekend
             m_Disposed = false;
             m_ScaleOptionLabels = m_ScaleOptions.Select((i => i.ToString())).ToArray();
             SetupChapters();
-            HandleJobsPerBatchOption();
+            SetJobsPerBatch(m_JobCount);
         }
 
         void SetupChapters()
@@ -158,6 +164,8 @@ namespace RayTracingWeekend
             if (k_TotalSamplesStyle == null)
                 SetupStyles();
 
+            EditorGUILayout.HelpBox(k_IntroText, MessageType.Info);
+            
             DrawScaleOptions();
             
             m_ScrollPosition = EditorGUILayout.BeginScrollView(m_ScrollPosition);
@@ -185,21 +193,25 @@ namespace RayTracingWeekend
             EditorGUILayout.EndScrollView();
         }
 
+
         void HandleJobsPerBatchOption()
         {
-            var newCount = EditorGUILayout.DelayedIntField("Parallel jobs / batch", m_JobCount);
+            var newCount = EditorGUILayout.DelayedIntField(k_JobCountContent, m_JobCount);
             if (newCount == m_JobCount)
                 return;
             
             if (newCount % 2 == 0 && newCount > 0 && newCount < 12)
-            {
-                m_JobCount = newCount;
-                m_ChapterEight.JobsPerBatch = newCount;
-                m_ChapterNine.JobsPerBatch = newCount;
-                m_ChapterTen.JobsPerBatch = newCount;
-                m_ChapterEleven.JobsPerBatch = newCount;
-                m_ChapterTwelve.JobsPerBatch = newCount;
-            }
+                SetJobsPerBatch(newCount);
+        }
+        
+        void SetJobsPerBatch(int newCount)
+        {
+            m_JobCount = newCount;
+            m_ChapterEight.JobsPerBatch = newCount;
+            m_ChapterNine.JobsPerBatch = newCount;
+            m_ChapterTen.JobsPerBatch = newCount;
+            m_ChapterEleven.JobsPerBatch = newCount;
+            m_ChapterTwelve.JobsPerBatch = newCount;
         }
 
         void SetupStyles()
