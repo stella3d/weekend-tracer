@@ -44,3 +44,7 @@ Try opening the scene `ChapterEight` if using this window.
 I did a version that parallelized on a per-pixel basis using `IJobParallelFor`, but it had a bug i didn't solve, so i scrapped it.
 
 The project is setup for Unity 2019.1, but it should also compile in 2018.3.x
+
+### Bugs?
+
+If something is broken, please feel free to submit an issue.  
