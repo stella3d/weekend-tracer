@@ -44,8 +44,8 @@ namespace RayTracingWeekend
         Vector2 m_ScrollPosition;
 
         // all state for user options goes under here
-        int m_SelectedScaleOption = 8;
-        int m_PreviousScaleOption = 8;
+        int m_SelectedScaleOption = 4;
+        int m_PreviousScaleOption = 4;
         readonly int[] m_ScaleOptions = { 1, 2, 4, 6, 8, 10};
         string[] m_ScaleOptionLabels;
         string m_CanvasSizeLabel;
@@ -54,8 +54,8 @@ namespace RayTracingWeekend
         float m_Chapter4ZPosition = -1f;
         Color32 m_Chapter4Color = Color.red;
         
-        // TODO - make it so these options can only be set to proper multiples
         int m_SamplesPerPixel = 64;
+        int m_JobCount = 6;
         
         EditorCoroutine m_Routine;
         JobHandle m_DummyHandle;
@@ -81,6 +81,7 @@ namespace RayTracingWeekend
             m_Disposed = false;
             m_ScaleOptionLabels = m_ScaleOptions.Select((i => i.ToString())).ToArray();
             SetupChapters();
+            HandleJobsPerBatchOption();
         }
 
         void SetupChapters()
@@ -173,6 +174,8 @@ namespace RayTracingWeekend
             
             EditorGUILayout.HelpBox(k_LaterChaptersText, MessageType.Info);
             m_SamplesPerPixel = EditorGUILayout.IntField("Samples Per Pixel", m_SamplesPerPixel);
+            HandleJobsPerBatchOption();
+            
             DrawLaterChapter(m_ChapterEight, "Eight");
             DrawLaterChapter(m_ChapterNine, "Nine");
             DrawLaterChapter(m_ChapterTen, "Ten");
@@ -180,6 +183,23 @@ namespace RayTracingWeekend
             DrawChapterWithFocusSupport(m_ChapterTwelve, "Twelve");
             
             EditorGUILayout.EndScrollView();
+        }
+
+        void HandleJobsPerBatchOption()
+        {
+            var newCount = EditorGUILayout.DelayedIntField("Parallel jobs / batch", m_JobCount);
+            if (newCount == m_JobCount)
+                return;
+            
+            if (newCount % 2 == 0 && newCount > 0 && newCount < 12)
+            {
+                m_JobCount = newCount;
+                m_ChapterEight.JobsPerBatch = newCount;
+                m_ChapterNine.JobsPerBatch = newCount;
+                m_ChapterTen.JobsPerBatch = newCount;
+                m_ChapterEleven.JobsPerBatch = newCount;
+                m_ChapterTwelve.JobsPerBatch = newCount;
+            }
         }
 
         void SetupStyles()
