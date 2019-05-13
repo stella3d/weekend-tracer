@@ -1,7 +1,7 @@
 # weekend-tracer
 An implementation of Peter Shirley's [Ray Tracing in One Weekend](http://www.realtimerendering.com/raytracing/Ray%20Tracing%20in%20a%20Weekend.pdf), using C# and Unity's [Burst compiler](https://docs.unity3d.com/Packages/com.unity.burst@1.0/manual/index.html).
 
-### Aknowledgements
+### Acknowledgements
 
 Thanks to Peter for the excellent original book.
 
