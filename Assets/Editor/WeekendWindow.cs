@@ -44,8 +44,8 @@ namespace RayTracingWeekend
         Vector2 m_ScrollPosition;
 
         // all state for user options goes under here
-        int m_SelectedScaleOption = 4;
-        int m_PreviousScaleOption = 4;
+        int m_SelectedScaleOption = 8;
+        int m_PreviousScaleOption = 8;
         readonly int[] m_ScaleOptions = { 1, 2, 4, 6, 8, 10};
         string[] m_ScaleOptionLabels;
         string m_CanvasSizeLabel;
@@ -56,7 +56,6 @@ namespace RayTracingWeekend
         
         // TODO - make it so these options can only be set to proper multiples
         int m_SamplesPerPixel = 64;
-        int m_SingleSampleJobsPerBatch = 4;
         
         EditorCoroutine m_Routine;
         JobHandle m_DummyHandle;
@@ -75,6 +74,7 @@ namespace RayTracingWeekend
 
         void OnEnable()
         {
+            Debug.Log("processor count : " + Environment.ProcessorCount);
             SetupStyles();
             m_DummyHandle = new JobHandle();
             m_DummyHandle.Complete();
@@ -95,10 +95,20 @@ namespace RayTracingWeekend
             m_ChapterSeven = new ChapterSeven(size.x, size.y);
             
             // from chapter 8 on, the same implementation is re-used
-            m_ChapterEight = new BatchedTracer(ExampleSphereSets.ChapterEight(), CameraFrame.Default, size.x, size.y);
-            m_ChapterNine = new BatchedTracer(ExampleSphereSets.FiveWithDielectric(), CameraFrame.Default, size.x, size.y);
-            m_ChapterTen = new BatchedTracer(ExampleSphereSets.FiveWithDielectric(), CameraFrame.ChapterTen, size.x, size.y);
-            m_ChapterEleven = new BatchedTracer(ExampleSphereSets.FiveWithDielectric(), CameraFrame.ChapterEleven, size.x, size.y);
+            m_ChapterEight = new BatchedTracer(ExampleSphereSets.ChapterEight(), 
+                CameraFrame.Default, size.x, size.y);
+            m_ChapterNine = new BatchedTracer(ExampleSphereSets.FiveWithDielectric(),
+                CameraFrame.Default, size.x, size.y);
+            m_ChapterTen = new BatchedTracer(ExampleSphereSets.FiveWithDielectric(), 
+                CameraFrame.ChapterTen, size.x, size.y);
+            m_ChapterEleven = new BatchedTracer(ExampleSphereSets.FiveWithDielectric(), 
+                CameraFrame.ChapterEleven, size.x, size.y);
+            
+            // make sure we get a random seed for our random scene
+            var tempRng = new Unity.Mathematics.Random();
+            tempRng.InitState((uint)UnityEngine.Random.Range(1, 1000));
+            m_ChapterTwelve = new BatchedTracer(ExampleSphereSets.RandomScene(500, tempRng.NextUInt()), 
+                CameraFrame.ChapterTwelve, size.x, size.y);
         }
         
         void ScaleChapters()
@@ -115,12 +125,11 @@ namespace RayTracingWeekend
             m_ChapterNine.Resize(size);
             m_ChapterTen.Resize(size);
             m_ChapterEleven.Resize(size);
+            m_ChapterTwelve.Resize(size);
         }
 
         void Dispose()
         {
-            // TODO make the disposing work properly
-            Debug.Log("disposing all chapters....");
             m_ChaptersOneAndTwo.Dispose();
             m_ChapterThree.Dispose();
             m_ChapterFour.Dispose();
@@ -132,6 +141,7 @@ namespace RayTracingWeekend
             m_ChapterNine.Dispose();
             m_ChapterTen.Dispose();
             m_ChapterEleven.Dispose();
+            m_ChapterTwelve.Dispose();
             m_Disposed = true;
         }
 
@@ -162,6 +172,7 @@ namespace RayTracingWeekend
             DrawLaterChapter(m_ChapterNine, "Nine");
             DrawLaterChapter(m_ChapterTen, "Ten");
             DrawChapterWithFocusSupport(m_ChapterEleven, "Eleven");
+            DrawChapterWithFocusSupport(m_ChapterTwelve, "Twelve");
             
             EditorGUILayout.EndScrollView();
         }
@@ -197,10 +208,7 @@ namespace RayTracingWeekend
                 m_ScaleOptions, maxWidth);
 
             if (m_PreviousScaleOption != m_SelectedScaleOption)
-            {
-                // resize our canvases if we've changed canvas scale
                 ScaleChapters();
-            }
 
             m_PreviousScaleOption = m_SelectedScaleOption;
 
@@ -236,22 +244,6 @@ namespace RayTracingWeekend
             DrawChapterBasic(m_ChapterSeven, "7");
         }
         
-        void DrawChapterEight()
-        {
-            DrawLaterChapter(m_ChapterEight, "Eight");
-        }
-
-        void DrawChapterNine()
-        {
-            m_ChapterNine.camera = CameraFrame.Default;
-            DrawLaterChapter(m_ChapterNine, "Nine");
-        }
-        
-        void DrawChapterTen()
-        {
-            DrawLaterChapter(m_ChapterTen, "Ten");
-        }
-        
         static void DrawChapterBasic<T>(Chapter<T> chapter, string chapterNumber) where T: struct
         {
             if (GUILayout.Button($"Draw Chapter {chapterNumber} Image"))
@@ -270,6 +262,8 @@ namespace RayTracingWeekend
             });
         }
         
+        // used for chapter 11 & 12 - the job that supports focus is different from the one that doesn't,
+        // so we need to start a different coroutine on click
         void DrawChapterWithFocusSupport(BatchedTracer chapter, string chapterNumber)
         {
             DrawLaterChapter(chapter, chapterNumber, (tracer) =>
@@ -290,9 +284,7 @@ namespace RayTracingWeekend
             EditorGUILayout.Space();
 
             if (GUILayout.Button($"Draw Chapter {chapterNumber} Image"))
-            {
                 onClick(chapter);
-            }
 
             DrawTexture(chapter.texture);
             EditorGUILayout.Separator();

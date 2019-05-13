@@ -31,6 +31,9 @@ namespace RayTracingWeekend
                 case 10:
                     var jobTen = new CombineJobTen(sources, output, completedSampleCount);
                     return jobTen.Schedule(sources[0].Length, 1024, dependency);
+                case 12:
+                    var jobTwelve = new CombineJobTwelve(sources, output, completedSampleCount);
+                    return jobTwelve.Schedule(sources[0].Length, 1024, dependency);
             }
         }
     }
@@ -241,6 +244,59 @@ namespace RayTracingWeekend
             var aWeighted = a * CompletedSampleCount;
 
             var acc = (sumPixel + aWeighted) / (10 + CompletedSampleCount);
+            acc.w = 1f; // hard-code full alpha
+            Accumulated[i] = acc;
+        }
+    }
+    
+    [BurstCompile]
+    public struct CombineJobTwelve : IJobParallelFor
+    {
+        public int CompletedSampleCount;
+
+        [ReadOnly] public NativeArray<float3> In1;
+        [ReadOnly] public NativeArray<float3> In2;
+        [ReadOnly] public NativeArray<float3> In3;
+        [ReadOnly] public NativeArray<float3> In4;
+        [ReadOnly] public NativeArray<float3> In5;
+        [ReadOnly] public NativeArray<float3> In6;
+        [ReadOnly] public NativeArray<float3> In7;
+        [ReadOnly] public NativeArray<float3> In8;
+        [ReadOnly] public NativeArray<float3> In9;
+        [ReadOnly] public NativeArray<float3> In10;
+        [ReadOnly] public NativeArray<float3> In11;
+        [ReadOnly] public NativeArray<float3> In12;
+
+        public NativeArray<float4> Accumulated;
+
+        public CombineJobTwelve(NativeArray<float3>[] buffers, NativeArray<float4> accumulated, int completedSamples)
+        {
+            In1 = buffers[0];
+            In2 = buffers[1];
+            In3 = buffers[2];
+            In4 = buffers[3];
+            In5 = buffers[4];
+            In6 = buffers[5];
+            In7 = buffers[6];
+            In8 = buffers[7];
+            In9 = buffers[8];
+            In10 = buffers[9];
+            In11 = buffers[10];
+            In12 = buffers[11];
+            Accumulated = accumulated;
+            CompletedSampleCount = completedSamples;
+        }
+
+        public void Execute(int i)
+        {
+            var sum = In1[i] + In2[i] + In3[i] + In4[i] + In5[i] + In6[i] + In7[i] + 
+                      In8[i] + In9[i] + In10[i] + In11[i] + In12[i];
+            var sumPixel = new float4(sum.x, sum.y, sum.z, 1f);
+
+            var a = Accumulated[i];
+            var aWeighted = a * CompletedSampleCount;
+
+            var acc = (sumPixel + aWeighted) / (12 + CompletedSampleCount);
             acc.w = 1f; // hard-code full alpha
             Accumulated[i] = acc;
         }

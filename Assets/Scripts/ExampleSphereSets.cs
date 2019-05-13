@@ -1,3 +1,4 @@
+using System.Runtime.CompilerServices;
 using Unity.Collections;
 using Unity.Mathematics;
 
@@ -77,83 +78,61 @@ namespace RayTracingWeekend
             };
         }
         
-        
-        public static HitableArray<Sphere> DozenVaryingSizeAndMaterial(Allocator allocator = Allocator.Persistent)
+        public static HitableArray<Sphere> RandomScene(int n, uint seed = default, Allocator allocator = Allocator.Persistent)
         {
-            var smallFuzz = 0.08f;
-            return new HitableArray<Sphere>(14, allocator)
+            var rng = new Random();
+            rng.InitState(seed);
+            var list = new HitableArray<Sphere>(n, allocator)
             {
-                Objects =
-                {
-                    [0] = new Sphere(new float3(0f, -0.03f, -0.98f), 0.45f, 
-                        new Material(MaterialType.Metal, new float3(0.3f, 0.3f, 0.6f), 0.07f)),
-                    [1] = new Sphere(new float3(0f, -100.5f, -1f), 100f,
-                        new Material(MaterialType.Lambertian, new float3(0.4f, 0.6f, 0.4f))),
-                    [2] = new Sphere(new float3(1f, 0f, -1f), 0.3f,
-                        new Material(MaterialType.Metal, new float3(0.6f, 0.7f, 0.75f), 0.04f)),
-                    [3] = new Sphere(new float3(-1.05f, 0f, -1f), 0.35f,
-                        new Material(MaterialType.Metal, new float3(1f, 0.7f, 0.8f), 0.2f)),
-                    [4] = new Sphere(new float3(-0.33f, -0.425f, -0.6f), 0.075f,
-                        new Material(MaterialType.Metal, new float3(0.1f, 0.4f, 0.8f), smallFuzz)),
-                    [5] = new Sphere(new float3(-1.05f, -0.46f, -0.6f), 0.04f,
-                        new Material(MaterialType.Metal, new float3(0.1f, 0.6f, 0.7f), smallFuzz)),
-                    [6] = new Sphere(new float3(1.06f, -0.47f, -0.6f), 0.03f,
-                        new Material(MaterialType.Metal, new float3(0.5f, 0.0f, 0.7f), smallFuzz)),
-                    [7] = new Sphere(new float3(0.8f, -0.45f, -0.58f), 0.05f,
-                        new Material(MaterialType.Metal, new float3(0.1f, 0.8f, 0.4f), smallFuzz)),
-                    [8] = new Sphere(new float3(0.64f, -0.475f, -0.65f), 0.025f,
-                        new Material(MaterialType.Metal, new float3(0.0f, 0.2f, 0.8f), smallFuzz)),
-                    [9] = new Sphere(new float3(0.5f, -0.475f, -0.75f), 0.025f,
-                        new Material(MaterialType.Metal, new float3(0.0f, 0.1f, 0.9f), smallFuzz)),
-                    [10] = new Sphere(new float3(-0.65f, -0.485f, -0.7f), 0.015f,
-                        new Material(MaterialType.Metal, new float3(0.6f, 0.0f, 0.9f), smallFuzz)),
-                    [11] = new Sphere(new float3(0.25f, -0.485f, -0.6f), 0.015f,
-                        new Material(MaterialType.Metal, new float3(0.7f, 0.0f, 1f), smallFuzz)),
-                    [12] = new Sphere(new float3(-0.7f, -0.4875f, -0.58f), 0.0125f,
-                        new Material(MaterialType.Metal, new float3(0.6f, 0.0f, 0.2f), smallFuzz)),
-                    [13] = new Sphere(new float3(-0.75f, -0.25f, -0.575f), 0.025f,
-                        new Material(MaterialType.Metal, new float3(0.6f, 0.0f, 0.2f), smallFuzz))
-                }
+                [0] = new Sphere(new float3(0, -1000, 0), 1000,
+                    new Material(MaterialType.Lambertian, new float3(0.5f, 0.5f, 0.5f)))
             };
+
+            var i = 1;
+            float3 centerComparePoint = new float3(4f, 0.2f, 0f);
+            for (int a = -11; a < 11; a++)
+            {
+                for (int b = -11; b < 11; b++)
+                {
+                    float chooseMat = rng.NextFloat();
+                    float3 center = new float3(a+0.9f*rng.NextFloat(), 0.2f, b+0.9f*rng.NextFloat());
+                    if (!(math.length(center - centerComparePoint) > 0.9f)) 
+                        continue;
+                    
+                    if (chooseMat < 0.8f)        // diffuse
+                    {
+                        var diffuseMat = new Material(MaterialType.Lambertian, RandomFloat3(ref rng));
+                        list[i++] = new Sphere(center, 0.2f, diffuseMat);
+                    }
+                    else if (chooseMat < 0.95f)        // metal
+                    {
+                        var metalMat = new Material(MaterialType.Metal, RandomFloat3(ref rng));
+                        list[i++] = new Sphere(center, 0.2f, metalMat);
+                    }
+                    else                         // glass
+                    {
+                        var metalMat = new Material(MaterialType.Dielectric, RandomFloat3(ref rng));
+                        list[i++] = new Sphere(center, 0.2f, metalMat);
+                    }
+                }
+            }
+            
+            list[i++] = new Sphere(new float3(0, 1, 0), 1f,  
+                new Material(MaterialType.Dielectric, float3.zero, 0f, 1.5f));
+            list[i++] = new Sphere(new float3(-4, 1, 0), 1f,  
+                new Material(MaterialType.Lambertian, new float3(0.4f, 0.2f, 0.1f), 0f, 1.5f));
+            list[i] = new Sphere(new float3(4, 1, 0), 1f,  
+                new Material(MaterialType.Metal, new float3(0.7f, 0.6f, 0.5f)));
+
+            return list;
         }
-        
-        public static HitableArray<Sphere> DozenVaryingSizeAndMaterialDielectric(Allocator allocator = Allocator.Persistent)
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        static float3 RandomFloat3(ref Random rng)
         {
-            var smallFuzz = 0.08f;
-            return new HitableArray<Sphere>(14, allocator)
-            {
-                Objects =
-                {
-                    [0] = new Sphere(new float3(0f, -0.03f, -0.98f), 0.45f, 
-                        new Material(MaterialType.Metal, new float3(0.3f, 0.3f, 0.6f), 0.07f)),
-                    [1] = new Sphere(new float3(0f, -100.5f, -1f), 100f,
-                        new Material(MaterialType.Lambertian, new float3(0.4f, 0.6f, 0.4f))),
-                    [2] = new Sphere(new float3(1f, 0f, -1f), 0.3f,
-                        new Material(MaterialType.Metal, new float3(0.6f, 0.7f, 0.75f), 0.04f)),
-                    [3] = new Sphere(new float3(-1.05f, 0f, -1f), 0.35f,
-                        new Material(MaterialType.Metal, new float3(1f, 0.7f, 0.8f), 0.2f)),
-                    [4] = new Sphere(new float3(-0.33f, -0.425f, -0.6f), 0.075f,
-                        new Material(MaterialType.Metal, new float3(0.1f, 0.4f, 0.8f), smallFuzz)),
-                    [5] = new Sphere(new float3(-1.05f, -0.46f, -0.6f), 0.04f,
-                        new Material(MaterialType.Metal, new float3(0.1f, 0.6f, 0.7f), smallFuzz)),
-                    [6] = new Sphere(new float3(1.06f, -0.47f, -0.6f), 0.03f,
-                        new Material(MaterialType.Dielectric, new float3(0.5f, 0.0f, 0.7f), smallFuzz, 1f)),
-                    [7] = new Sphere(new float3(0.8f, -0.45f, -0.58f), 0.05f,
-                        new Material(MaterialType.Metal, new float3(0.1f, 0.8f, 0.4f), smallFuzz)),
-                    [8] = new Sphere(new float3(0.64f, -0.475f, -0.65f), 0.025f,
-                        new Material(MaterialType.Metal, new float3(0.0f, 0.2f, 0.8f), smallFuzz)),
-                    [9] = new Sphere(new float3(0.5f, -0.475f, -0.75f), 0.025f,
-                        new Material(MaterialType.Metal, new float3(0.0f, 0.1f, 0.9f), smallFuzz)),
-                    [10] = new Sphere(new float3(-0.65f, -0.485f, -0.7f), 0.015f,
-                        new Material(MaterialType.Metal, new float3(0.6f, 0.0f, 0.9f), smallFuzz)),
-                    [11] = new Sphere(new float3(0.25f, -0.485f, -0.6f), 0.015f,
-                        new Material(MaterialType.Metal, new float3(0.7f, 0.0f, 1f), smallFuzz)),
-                    [12] = new Sphere(new float3(-0.7f, -0.4875f, -0.58f), 0.0125f,
-                        new Material(MaterialType.Metal, new float3(0.6f, 0.0f, 0.2f), smallFuzz)),
-                    [13] = new Sphere(new float3(-0.75f, -0.25f, -0.575f), 0.025f,
-                        new Material(MaterialType.Metal, new float3(0.6f, 0.0f, 0.2f), smallFuzz))
-                }
-            };
+            return new float3(rng.NextFloat() * rng.NextFloat(),
+                rng.NextFloat() * rng.NextFloat(),
+                rng.NextFloat() * rng.NextFloat());
         }
     }
 }

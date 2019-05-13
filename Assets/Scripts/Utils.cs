@@ -1,7 +1,10 @@
+using System;
 using System.Runtime.CompilerServices;
 using Unity.Collections;
 using Unity.Mathematics;
 using UnityEditor;
+using UnityEngine;
+using Random = Unity.Mathematics.Random;
 
 namespace RayTracingWeekend
 {
@@ -77,6 +80,15 @@ namespace RayTracingWeekend
                 array.Dispose();
         
             array = new NativeArray<T>(newLength, allocator);
+        }
+
+        public static int GetJobCount()
+        {
+            var procs = Environment.ProcessorCount;
+            if (procs >= 8)
+                return procs - 2;
+            else
+                return procs;
         }
     }
 }

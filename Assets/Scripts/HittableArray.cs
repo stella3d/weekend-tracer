@@ -47,6 +47,12 @@ namespace RayTracingWeekend
         {
             return GetEnumerator();
         }
+        
+        public T this[int i]
+        {
+            get => Objects[i];
+            set => Objects[i] = value;
+        }
 
         public void Dispose()
         {

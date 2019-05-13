@@ -143,5 +143,22 @@ namespace RayTracingWeekend
                 return frame;
             }
         }
+        
+        public static CameraFrame ChapterTwelve
+        {
+            get
+            {
+                var lookFrom = new float3(13f, 2f, 3f);
+                var lookAt = new float3(0f, 0f, 0f);
+                var distToFocus = 10f;
+                var aperture = 0.1f;
+                var up = new float3(0f, 1f, 0f);
+                var fov = 20f;
+                // this aspect ratio is hardcoded based on it being the one from the book
+                var aspectRatio = 2f;
+                var frame = new CameraFrame(lookFrom, lookAt, up, fov, aspectRatio, aperture, distToFocus);
+                return frame;
+            }
+        }
     }
 }

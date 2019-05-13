@@ -20,21 +20,24 @@ namespace RayTracingWeekend
         static readonly int[] k_JobsPerBatchOptions = {1, 2, 4, 6, 8, 10};
         static readonly string k_AvailableOptionsMessage = "job count per batch must be one of: 1, 2, 4, 6, 8, 10";
 
-        int m_JobsPerBatch = 4;
+        int m_JobsPerBatch = Utils.GetJobCount();
 
-        public int jobsPerBatch
+        public int JobsPerBatch
         {
-            get { return m_JobsPerBatch; }
+            get => m_JobsPerBatch;
             set
             {
-                if (value == m_JobsPerBatch)
+                if (value == m_JobsPerBatch || value % 2 != 0)
                     return;
                 if (value > k_MaxJobsPerBatch)
                     Debug.Log(k_MaxJobsMessage);
                 else if (!k_JobsPerBatchOptions.Contains(value))
                     Debug.Log(k_AvailableOptionsMessage);
                 else
+                {
                     m_JobsPerBatch = value;
+                    AllocateSampleJobBuffers(texture.width * texture.height);
+                }
             }
         }
         
@@ -72,7 +75,7 @@ namespace RayTracingWeekend
         internal void AllocateSampleJobBuffers(int pixelCount, Allocator allocator = Allocator.Persistent)
         {
             m_BatchHandles.DisposeIfCreated();
-            m_BatchHandles = new NativeArray<JobHandle>(jobsPerBatch, allocator);
+            m_BatchHandles = new NativeArray<JobHandle>(m_JobsPerBatch, allocator);
 
             if (m_BatchBuffers != null)
                 for (int j = 0; j < m_BatchBuffers.Length; j++)
@@ -80,7 +83,7 @@ namespace RayTracingWeekend
             
 
             // in sample jobs, we only calculate RGB, no alpha, so use float3 instead of float4
-            m_BatchBuffers = new NativeArray<float3>[jobsPerBatch];
+            m_BatchBuffers = new NativeArray<float3>[m_JobsPerBatch];
             for (int j = 0; j < m_BatchBuffers.Length; j++)
                 m_BatchBuffers[j] = new NativeArray<float3>(pixelCount, allocator);
         }
@@ -207,7 +210,7 @@ namespace RayTracingWeekend
 
         public JobHandle ScheduleBatch(Func<int, JobHandle, JobHandle> scheduleSingle)
         {
-            for (int i = 0; i < jobsPerBatch; i++)
+            for (int i = 0; i < m_JobsPerBatch; i++)
             {
                 m_BatchHandles[i] = scheduleSingle(i, m_Handle);
             }
@@ -225,7 +228,7 @@ namespace RayTracingWeekend
         public void CompleteAndDraw()
         {
             m_Handle.Complete();
-            CompletedSampleCount += jobsPerBatch;
+            CompletedSampleCount += m_JobsPerBatch;
             texture.LoadAndApply(PixelBuffer, false);
         }
 
@@ -246,7 +249,7 @@ namespace RayTracingWeekend
             if (Time.time - lastBatchTime < cycleTime)
                 yield return null;
 
-            for (int i = 0; i < count / jobsPerBatch; i++)
+            for (int i = 0; i < count / m_JobsPerBatch; i++)
             {
                 draw();
                 onBatchComplete();
