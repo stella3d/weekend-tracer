@@ -1,6 +1,8 @@
 # weekend-tracer
 An implementation of Peter Shirley's [Ray Tracing in One Weekend](http://www.realtimerendering.com/raytracing/Ray%20Tracing%20in%20a%20Weekend.pdf), using C# and Unity's [Burst compiler](https://docs.unity3d.com/Packages/com.unity.burst@1.0/manual/index.html).
 
+![A rendering of the random spheres from chapter 12](https://github.com/stella3d/weekend-tracer/blob/master/chaptertwelvesmall.PNG?raw=true)
+
 ### Acknowledgements
 
 Thanks to Peter for the excellent original book.
