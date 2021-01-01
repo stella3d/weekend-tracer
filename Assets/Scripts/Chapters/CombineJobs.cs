@@ -124,9 +124,6 @@ namespace RayTracingWeekend
 
         public CombineJobSix(NativeArray<float3>[] buffers, NativeArray<float4> accumulated, int completedSamples)
         {
-            if(buffers.Length != 8)
-                Debug.LogWarning($"CombineJobEight constructor needs 8 buffer inputs, but got {buffers.Length}!");
-
             In1 = buffers[0];
             In2 = buffers[1];
             In3 = buffers[2];
