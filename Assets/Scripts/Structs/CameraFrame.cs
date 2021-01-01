@@ -1,6 +1,5 @@
 using System.Runtime.CompilerServices;
 using Unity.Mathematics;
-using UnityEditor.MemoryProfiler;
 using UnityEngine;
 using Random = Unity.Mathematics.Random;
 
@@ -14,6 +13,8 @@ namespace RayTracingWeekend
         public float3 vertical;
         public float3 u, v, w;
         public float lensRadius;
+
+        public Timing ShutterTimes;
         
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public Ray GetRay(float s, float t)
@@ -59,6 +60,8 @@ namespace RayTracingWeekend
             lowerLeftCorner = origin - halfWidth * u - halfHeight * v - w;
             horizontal = 2 * halfWidth * u;
             vertical = 2 * halfHeight * v;
+
+            ShutterTimes = new Timing();
         }
 
         /// <summary>
@@ -78,13 +81,16 @@ namespace RayTracingWeekend
             lowerLeftCorner = origin - halfWidth * u - halfHeight * v - w;
             horizontal = 2 * halfWidth * u;
             vertical = 2 * halfHeight * v;
+
+            ShutterTimes = new Timing();
         }
-        
+
         /// <summary>
-        /// The camera constructor used in Chapter 11
+        /// The camera constructor used in Chapter 11 onwards
         /// </summary>
         public CameraFrame(float3 lookFrom, float3 lookAt, float3 vup, 
-            float vfov, float aspect, float aperture = 2f, float focusDistance = 1f)
+            float vfov, float aspect, float aperture = 2f, float focusDistance = 1f,
+            Timing shutterTimes = new Timing())
         {
             lensRadius = aperture / 2;
             float theta = vfov * math.PI / 180f;
@@ -99,6 +105,8 @@ namespace RayTracingWeekend
             lowerLeftCorner = origin - focusedHalfWidth - focusedHalfHeight - focusDistance * w;
             horizontal = 2 * halfWidth * focusDistance * u;
             vertical = 2 * halfHeight * focusDistance * v;
+
+            ShutterTimes = shutterTimes;
         }
 
         public static CameraFrame Default =>
