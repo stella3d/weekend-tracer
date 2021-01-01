@@ -6,13 +6,22 @@ namespace RayTracingWeekend
 {
     public struct Ray
     {
-        public float3 origin;
-        public float3 direction;
+        public readonly float3 origin;
+        public readonly float3 direction;
+        public readonly double time;
 
         public Ray(float3 origin, float3 direction)
         {
             this.origin = origin;
             this.direction = direction;
+            this.time = 0;
+        }
+
+        public Ray(float3 origin, float3 direction, double time = 0.0)
+        {
+            this.origin = origin;
+            this.direction = direction;
+            this.time = time;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
