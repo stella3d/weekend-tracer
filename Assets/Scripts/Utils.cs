@@ -38,10 +38,8 @@ namespace RayTracingWeekend
         }
 
         /// <summary>
-        /// Draw the background gradient for any Ray that 
+        /// Draw the background gradient for any Ray
         /// </summary>
-        /// <param name="r"></param>
-        /// <returns></returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static float3 BackgroundColor(ref Ray r)
         {
